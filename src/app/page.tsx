@@ -143,28 +143,31 @@ export default function Home() {
               onCustomExpensesChange={setCustomExpenses}
             />
             
-            <CurrencySelector
-              selectedCurrency={selectedCurrency}
-              onCurrencyChange={setSelectedCurrency}
-            />
-            
-            {/* Split Method Toggle */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
-              <div className="flex items-center justify-center mb-4">
-                <TwoStateToggle
-                  leftLabel="Income"
-                  rightLabel="Room Size"
-                  value={useRoomSizeSplit}
-                  onChange={setUseRoomSizeSplit}
-                />
+            {/* Mobile-only controls */}
+            <div className="lg:hidden space-y-6">
+              <CurrencySelector
+                selectedCurrency={selectedCurrency}
+                onCurrencyChange={setSelectedCurrency}
+              />
+              
+              {/* Split Method Toggle */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
+                <div className="flex items-center justify-center mb-4">
+                  <TwoStateToggle
+                    leftLabel="Income"
+                    rightLabel="Room Size"
+                    value={useRoomSizeSplit}
+                    onChange={setUseRoomSizeSplit}
+                  />
+                </div>
+                <p className="text-sm text-gray-600 text-center">
+                  {useRoomSizeSplit 
+                    ? "Rent will be split based on room square footage. Add room sizes below to use this method."
+                    : "Rent will be split based on annual income. Higher earners pay more rent."
+                  }
+                </p>
               </div>
-              <p className="text-sm text-gray-600 text-center">
-                {useRoomSizeSplit 
-                  ? "Rent will be split based on room square footage. Add room sizes below to use this method."
-                  : "Rent will be split based on annual income. Higher earners pay more rent."
-                }
-              </p>
             </div>
             
             <RoommateForm
@@ -175,7 +178,7 @@ export default function Home() {
           </div>
 
           {/* Results Section */}
-          <div>
+          <div className="space-y-6">
             {results.length > 0 ? (
               <ResultsDisplay
                 results={results}
@@ -197,6 +200,33 @@ export default function Home() {
                 </p>
               </div>
             )}
+            
+            {/* Desktop-only controls */}
+            <div className="hidden lg:block space-y-6">
+              <CurrencySelector
+                selectedCurrency={selectedCurrency}
+                onCurrencyChange={setSelectedCurrency}
+              />
+              
+              {/* Split Method Toggle */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
+                <div className="flex items-center justify-center mb-4">
+                  <TwoStateToggle
+                    leftLabel="Income"
+                    rightLabel="Room Size"
+                    value={useRoomSizeSplit}
+                    onChange={setUseRoomSizeSplit}
+                  />
+                </div>
+                <p className="text-sm text-gray-600 text-center">
+                  {useRoomSizeSplit 
+                    ? "Rent will be split based on room square footage. Add room sizes below to use this method."
+                    : "Rent will be split based on annual income. Higher earners pay more rent."
+                  }
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
