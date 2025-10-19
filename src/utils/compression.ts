@@ -18,7 +18,16 @@ export function compressCalculationData(data: CalculationData): string {
     data.roommates.map(roommate => [
       roommate.name,             // [0] name
       roommate.income,           // [1] income
-      roommate.roomSize || 0     // [2] room size (0 if undefined)
+      roommate.roomSize || 0,    // [2] room size (0 if undefined)
+      roommate.adjustments ? [
+        roommate.adjustments.hasPrivateBathroom ? 1 : 0,
+        roommate.adjustments.privateBathroomPercentage || 0,
+        roommate.adjustments.hasWindow ? 1 : 0,
+        roommate.adjustments.noWindowPercentage || 0,
+        roommate.adjustments.hasFlexWall ? 1 : 0,
+        roommate.adjustments.flexWallPercentage || 0,
+        roommate.adjustments.adjustmentPercentage || 0
+      ] : null                   // [3] adjustments array (null if no adjustments)
     ]),                          // [3] roommates array
     getCurrencyCode(data.currency || 'USD'), // [4] currency code
     data.useRoomSizeSplit ? 1 : 0   // [5] split method (1 = room size, 0 = income)
@@ -51,11 +60,20 @@ export function decompressCalculationData(compressedData: string): CalculationDa
         name: expense[0],                          // [0] name
         amount: expense[1]                         // [1] amount
       })),
-      roommates: parsedData[3].map((roommate: [string, number, number], index: number) => ({
+      roommates: parsedData[3].map((roommate: [string, number, number, number[] | null], index: number) => ({
         id: `roommate${index + 1}`,                // Generate ID from index
         name: roommate[0],                         // [0] name
         income: roommate[1],                       // [1] income
-        roomSize: roommate[2] === 0 ? undefined : roommate[2]  // [2] room size (undefined if 0)
+        roomSize: roommate[2] === 0 ? undefined : roommate[2],  // [2] room size (undefined if 0)
+        adjustments: roommate[3] ? {
+          hasPrivateBathroom: roommate[3][0] === 1,
+          privateBathroomPercentage: roommate[3][1] || undefined,
+          hasWindow: roommate[3][2] === 1,
+          noWindowPercentage: roommate[3][3] || undefined,
+          hasFlexWall: roommate[3][4] === 1,
+          flexWallPercentage: roommate[3][5] || undefined,
+          adjustmentPercentage: roommate[3][6] || undefined
+        } : undefined                              // [3] adjustments (undefined if null)
       })),
       currency: getCurrencyFromCode(parsedData[4]), // [4] currency from code
       useRoomSizeSplit: parsedData[5] === 1        // [5] split method

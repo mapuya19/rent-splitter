@@ -19,8 +19,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: true,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
         {
@@ -30,8 +29,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
       ];
@@ -52,8 +50,8 @@ describe('Room Adjustments', () => {
     });
   });
 
-  describe('Window and Door Adjustments', () => {
-    it('should reduce rent share for no window (-10%) and no door (-5%)', () => {
+  describe('Window and Flex Wall Adjustments', () => {
+    it('should reduce rent share for no window (-10%) and flex wall (-5%)', () => {
       const roommates: Roommate[] = [
         {
           id: '1',
@@ -62,8 +60,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: false,
-            hasDoor: false,
-            isSharedBedroom: false,
+            hasFlexWall: true,
           },
         },
         {
@@ -73,8 +70,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
       ];
@@ -84,7 +80,7 @@ describe('Room Adjustments', () => {
       const aliceResult = results.find(r => r.roommateId === '1');
       const bobResult = results.find(r => r.roommateId === '2');
       
-      // Alice should pay less due to no window and no door
+      // Alice should pay less due to no window and flex wall
       expect(aliceResult!.rentShare).toBeLessThan(bobResult!.rentShare);
       expect(aliceResult!.adjustmentAmount).toBeLessThan(0);
       expect(bobResult!.adjustmentAmount).toBeGreaterThan(0); // Bob pays more to compensate
@@ -105,8 +101,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
             adjustmentPercentage: 25, // +25% custom adjustment
           },
         },
@@ -117,8 +112,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
             adjustmentPercentage: -10, // -10% custom adjustment
           },
         },
@@ -146,8 +140,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: true, // +15%
             hasWindow: false, // -10%
-            hasDoor: false, // -5%
-            isSharedBedroom: false,
+            hasFlexWall: true, // -5%
             adjustmentPercentage: 5, // +5%
             // Total: +15% - 10% - 5% + 5% = +5%
           },
@@ -159,8 +152,8 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: true, // -20%
+            hasFlexWall: false,
+ // -20%
             adjustmentPercentage: 0,
             // Total: -20%
           },
@@ -189,8 +182,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
             adjustmentPercentage: 100, // Should be clamped to +50%
           },
         },
@@ -201,8 +193,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
             adjustmentPercentage: -100, // Should be clamped to -50%
           },
         },
@@ -256,8 +247,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: true, // +15%
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
         {
@@ -267,8 +257,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: false, // -10%
-            hasDoor: false, // -5%
-            isSharedBedroom: false,
+            hasFlexWall: true, // -5%
           },
         },
       ];
@@ -289,8 +278,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
         {
@@ -300,8 +288,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: false, // -10%
-            hasDoor: false, // -5%
-            isSharedBedroom: false,
+            hasFlexWall: true, // -5%
           },
         },
       ];
@@ -331,8 +318,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: true, // +15%
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
         {
@@ -342,8 +328,8 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: false, // -10%
-            hasDoor: false, // -5%
-            isSharedBedroom: true, // -20%
+            hasFlexWall: true, // -5%
+ // -20%
           },
         },
         {
@@ -353,8 +339,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
       ];
@@ -383,8 +368,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: true, // +15%
             hasWindow: true,
-            hasDoor: true,
-            isSharedBedroom: false,
+            hasFlexWall: false,
           },
         },
         {
@@ -394,8 +378,7 @@ describe('Room Adjustments', () => {
           adjustments: {
             hasPrivateBathroom: false,
             hasWindow: false, // -10%
-            hasDoor: false, // -5%
-            isSharedBedroom: false,
+            hasFlexWall: true, // -5%
           },
         },
       ];

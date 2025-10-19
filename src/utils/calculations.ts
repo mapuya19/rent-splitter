@@ -6,16 +6,24 @@ function calculateAdjustmentPercentage(adjustments?: RoomAdjustments): number {
   
   let adjustment = 0;
   
-  // Private bathroom adds 15% to rent share
-  if (adjustments.hasPrivateBathroom) adjustment += 15;
+  // Private bathroom (default: +15%)
+  if (adjustments.hasPrivateBathroom) {
+    adjustment += adjustments.privateBathroomPercentage ?? 15;
+  }
   
-  // No window reduces rent share by 10%
-  if (!adjustments.hasWindow) adjustment -= 10;
+  // No window (default: -10%)
+  if (!adjustments.hasWindow) {
+    const noWindowAdj = adjustments.noWindowPercentage ?? -10;
+    adjustment += noWindowAdj; // Add the value (which is negative)
+  }
   
-  // No door reduces rent share by 5%
-  if (!adjustments.hasDoor) adjustment -= 5;
+  // Flex wall (default: -5%)
+  if (adjustments.hasFlexWall) {
+    const flexWallAdj = adjustments.flexWallPercentage ?? -5;
+    adjustment += flexWallAdj; // Add the value (which is negative)
+  }
   
-  // Custom adjustment percentage (user-defined)
+  // Additional custom adjustment percentage (user-defined)
   if (adjustments.adjustmentPercentage !== undefined) {
     adjustment += adjustments.adjustmentPercentage;
   }

@@ -95,6 +95,90 @@ describe('Data Compression', () => {
     });
   });
 
+  describe('room adjustments', () => {
+    it('should preserve room adjustments in compression/decompression', () => {
+      const data: CalculationData = {
+        totalRent: 3000,
+        utilities: 200,
+        customExpenses: [],
+        roommates: [
+          {
+            id: '1',
+            name: 'Alice',
+            income: 50000,
+            roomSize: 150,
+            adjustments: {
+              hasPrivateBathroom: true,
+              privateBathroomPercentage: 15,
+              hasWindow: true,
+              noWindowPercentage: undefined,
+              hasFlexWall: false,
+              flexWallPercentage: undefined,
+              adjustmentPercentage: 5
+            }
+          },
+          {
+            id: '2',
+            name: 'Bob',
+            income: 50000,
+            roomSize: 120,
+            adjustments: {
+              hasPrivateBathroom: false,
+              privateBathroomPercentage: undefined,
+              hasWindow: false,
+              noWindowPercentage: -10,
+              hasFlexWall: true,
+              flexWallPercentage: -5,
+              adjustmentPercentage: 0
+            }
+          }
+        ],
+        currency: 'USD',
+        useRoomSizeSplit: true
+      };
+
+      const compressed = compressCalculationData(data);
+      const decompressed = decompressCalculationData(compressed);
+
+      // Verify Alice's adjustments
+      expect(decompressed.roommates[0].adjustments?.hasPrivateBathroom).toBe(true);
+      expect(decompressed.roommates[0].adjustments?.privateBathroomPercentage).toBe(15);
+      expect(decompressed.roommates[0].adjustments?.hasWindow).toBe(true);
+      expect(decompressed.roommates[0].adjustments?.hasFlexWall).toBe(false);
+      expect(decompressed.roommates[0].adjustments?.adjustmentPercentage).toBe(5);
+
+      // Verify Bob's adjustments
+      expect(decompressed.roommates[1].adjustments?.hasPrivateBathroom).toBe(false);
+      expect(decompressed.roommates[1].adjustments?.hasWindow).toBe(false);
+      expect(decompressed.roommates[1].adjustments?.noWindowPercentage).toBe(-10);
+      expect(decompressed.roommates[1].adjustments?.hasFlexWall).toBe(true);
+      expect(decompressed.roommates[1].adjustments?.flexWallPercentage).toBe(-5);
+    });
+
+    it('should handle roommates without adjustments', () => {
+      const data: CalculationData = {
+        totalRent: 2000,
+        utilities: 100,
+        customExpenses: [],
+        roommates: [
+          {
+            id: '1',
+            name: 'Alice',
+            income: 50000,
+            roomSize: 150
+          }
+        ],
+        currency: 'USD',
+        useRoomSizeSplit: true
+      };
+
+      const compressed = compressCalculationData(data);
+      const decompressed = decompressCalculationData(compressed);
+
+      expect(decompressed.roommates[0].adjustments).toBeUndefined();
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle very long names', () => {
       const dataWithLongNames = {

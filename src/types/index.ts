@@ -8,10 +8,12 @@ export interface Roommate {
 
 export interface RoomAdjustments {
   hasPrivateBathroom: boolean;
+  privateBathroomPercentage?: number; // Default: 15%
   hasWindow: boolean;
-  hasDoor: boolean;
-  isSharedBedroom: boolean; // For couples sharing one bedroom
-  adjustmentPercentage?: number; // Custom adjustment percentage (-50 to +50)
+  noWindowPercentage?: number; // Default: -10%
+  hasFlexWall: boolean; // Flex wall instead of permanent wall
+  flexWallPercentage?: number; // Default: -5%
+  adjustmentPercentage?: number; // Additional custom adjustment percentage (-50 to +50)
 }
 
 export interface CustomExpense {

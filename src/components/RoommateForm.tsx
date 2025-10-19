@@ -133,8 +133,7 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
                 adjustments={roommate.adjustments || {
                   hasPrivateBathroom: false,
                   hasWindow: true, // Default to having window (so "No Window" toggle is off)
-                  hasDoor: true,   // Default to having door (so "No Door" toggle is off)
-                  isSharedBedroom: false,
+                  hasFlexWall: false, // Default to no flex wall
                   adjustmentPercentage: 0,
                 }}
                 onAdjustmentsChange={(adjustments) => updateRoommateAdjustments(roommate.id, adjustments)}

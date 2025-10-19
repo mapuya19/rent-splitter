@@ -19,15 +19,15 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       
-      // Allow empty string, numbers, and one decimal point
-      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      // Allow empty string, negative sign, numbers, and one decimal point
+      if (value === '' || value === '-' || /^-?\d*\.?\d*$/.test(value)) {
         setInputValue(value);
         
         // Convert to number and call onValueChange if valid
         const numValue = parseFloat(value);
-        if (!isNaN(numValue) && numValue >= 0) {
+        if (!isNaN(numValue)) {
           onValueChange?.(numValue);
-        } else if (value === '') {
+        } else if (value === '' || value === '-') {
           onValueChange?.(0);
         }
       }
@@ -44,6 +44,14 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
           // Allow: home, end, left, right, down, up
           (e.keyCode >= 35 && e.keyCode <= 40)) {
+        return;
+      }
+      
+      // Allow minus/dash key (hyphen-minus: keyCode 189 on main keyboard, 109 on numpad)
+      // But only at the beginning and only once
+      if ((e.key === '-' || e.keyCode === 189 || e.keyCode === 109) && 
+          !inputValue.includes('-') && 
+          (e.currentTarget.selectionStart === 0 || inputValue === '')) {
         return;
       }
       
