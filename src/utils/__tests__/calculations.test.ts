@@ -1,4 +1,5 @@
-import { calculateRentSplit, generateShareableId, formatCurrency } from '../calculations';
+import { calculateRentSplit, generateShareableId } from '../calculations';
+import { formatCurrency } from '../currency';
 import { CalculationData } from '@/types';
 
 describe('calculations', () => {

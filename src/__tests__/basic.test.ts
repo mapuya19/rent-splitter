@@ -2,7 +2,8 @@
  * Basic tests to verify the testing setup works
  */
 
-import { calculateRentSplit, generateShareableId, formatCurrency } from '@/utils/calculations';
+import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
+import { formatCurrency } from '@/utils/currency';
 
 describe('Basic Functionality Tests', () => {
   describe('calculateRentSplit', () => {

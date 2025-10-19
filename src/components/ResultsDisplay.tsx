@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SplitResult } from '@/types';
-import { formatCurrency } from '@/utils/calculations';
+import { formatCurrency } from '@/utils/currency';
 import { Share2, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 
