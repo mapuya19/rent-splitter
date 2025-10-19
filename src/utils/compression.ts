@@ -20,7 +20,7 @@ export function compressCalculationData(data: CalculationData): string {
       roommate.income,           // [1] income
       roommate.roomSize || 0     // [2] room size (0 if undefined)
     ]),                          // [3] roommates array
-    getCurrencyCode(data.currency), // [4] currency code
+    getCurrencyCode(data.currency || 'USD'), // [4] currency code
     data.useRoomSizeSplit ? 1 : 0   // [5] split method (1 = room size, 0 = income)
   ];
 
@@ -46,12 +46,12 @@ export function decompressCalculationData(compressedData: string): CalculationDa
     return {
       totalRent: parsedData[0],                    // [0] rent
       utilities: parsedData[1],                    // [1] utilities
-      customExpenses: parsedData[2].map((expense: any[], index: number) => ({
+      customExpenses: parsedData[2].map((expense: [string, number], index: number) => ({
         id: `exp${index + 1}`,                     // Generate ID from index
         name: expense[0],                          // [0] name
         amount: expense[1]                         // [1] amount
       })),
-      roommates: parsedData[3].map((roommate: any[], index: number) => ({
+      roommates: parsedData[3].map((roommate: [string, number, number], index: number) => ({
         id: `roommate${index + 1}`,                // Generate ID from index
         name: roommate[0],                         // [0] name
         income: roommate[1],                       // [1] income
