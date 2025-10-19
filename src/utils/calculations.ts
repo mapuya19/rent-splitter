@@ -6,6 +6,9 @@ export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: bool
   // Check if any roommate has room size specified and toggle is on
   const hasRoomSizes = useRoomSizeSplit && roommates.some(roommate => roommate.roomSize && roommate.roomSize > 0);
   
+  // If room size split is enabled but no room sizes provided, fall back to equal split
+  const shouldUseEqualSplit = useRoomSizeSplit && !hasRoomSizes;
+  
   // Calculate utilities per person (split evenly)
   const utilitiesPerPerson = utilities / roommates.length;
   
@@ -29,6 +32,24 @@ export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: bool
         roommateName: roommate.name,
         income: roommate.income,
         incomePercentage: Math.round(roomSizePercentage * 100) / 100,
+        rentShare: Math.round(rentShare * 100) / 100,
+        utilitiesShare: Math.round(utilitiesPerPerson * 100) / 100,
+        customExpensesShare: Math.round(customExpensesPerPerson * 100) / 100,
+        totalShare: Math.round(totalShare * 100) / 100,
+      };
+    });
+  } else if (shouldUseEqualSplit) {
+    // Equal split when room size mode is on but no room sizes provided
+    rentShare = totalRent / roommates.length;
+    
+    return roommates.map(roommate => {
+      const totalShare = rentShare + utilitiesPerPerson + customExpensesPerPerson;
+      
+      return {
+        roommateId: roommate.id,
+        roommateName: roommate.name,
+        income: roommate.income,
+        incomePercentage: Math.round((1 / roommates.length) * 100) / 100,
         rentShare: Math.round(rentShare * 100) / 100,
         utilitiesShare: Math.round(utilitiesPerPerson * 100) / 100,
         customExpensesShare: Math.round(customExpensesPerPerson * 100) / 100,

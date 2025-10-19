@@ -22,7 +22,7 @@ describe('Sharing Integration Tests', () => {
   };
 
   it('should complete full sharing workflow', async () => {
-    const shareId = 'integration-test-123';
+    const shareId = 'integrationtest123';
     
     // Step 1: Store the data
     const storeRequest = new NextRequest('http://localhost:3000/api/share', {
@@ -55,8 +55,8 @@ describe('Sharing Integration Tests', () => {
   });
 
   it('should handle multiple shares with different IDs', async () => {
-    const shareId1 = 'multi-test-1';
-    const shareId2 = 'multi-test-2';
+    const shareId1 = 'multitest1';
+    const shareId2 = 'multitest2';
     
     const data1 = { ...testCalculationData, totalRent: 2000 };
     const data2 = { ...testCalculationData, totalRent: 4000 };
@@ -102,7 +102,7 @@ describe('Sharing Integration Tests', () => {
       ]
     };
 
-    const shareId = 'edge-case-test';
+    const shareId = 'edgecasetest';
     const request = new NextRequest('http://localhost:3000/api/share', {
       method: 'POST',
       body: JSON.stringify({ id: shareId, data: minimalData }),
@@ -127,7 +127,7 @@ describe('Sharing Integration Tests', () => {
 
     // Create multiple concurrent requests
     for (let i = 0; i < 5; i++) {
-      const shareId = `concurrent-test-${i}`;
+      const shareId = `concurrenttest${i}`;
       shareIds.push(shareId);
       
       const request = new NextRequest('http://localhost:3000/api/share', {
@@ -175,7 +175,7 @@ describe('Sharing Integration Tests', () => {
   });
 
   it('should handle retrieval of non-existent data', async () => {
-    const request = new NextRequest('http://localhost:3000/api/share?id=definitely-does-not-exist');
+    const request = new NextRequest('http://localhost:3000/api/share?id=definitelydoesnotexist');
     const response = await GET(request);
     
     expect(response.status).toBe(404);

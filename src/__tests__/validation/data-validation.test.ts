@@ -22,7 +22,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-rent-valid',
+          id: 'testrentvalid',
           data: { ...validBaseData, totalRent: 1500 }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-rent-negative',
+          id: 'testrentnegative',
           data: { ...validBaseData, totalRent: -100 }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -53,7 +53,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-rent-non-numeric',
+          id: 'testrentnonnumeric',
           data: { ...validBaseData, totalRent: 'not a number' }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-utilities-zero',
+          id: 'testutilitieszero',
           data: { ...validBaseData, utilities: 0 }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -83,7 +83,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-utilities-negative',
+          id: 'testutilitiesnegative',
           data: { ...validBaseData, utilities: -50 }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -99,7 +99,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-expenses-empty',
+          id: 'testexpensesempty',
           data: { ...validBaseData, customExpenses: [] }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -113,7 +113,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-expenses-non-array',
+          id: 'testexpensesnonarray',
           data: { ...validBaseData, customExpenses: 'not an array' }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -127,7 +127,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-expenses-missing-fields',
+          id: 'testexpensesmissingfields',
           data: {
             ...validBaseData,
             customExpenses: [{ name: 'Internet' }] // Missing id and amount
@@ -144,7 +144,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-expenses-negative',
+          id: 'testexpensesnegative',
           data: {
             ...validBaseData,
             customExpenses: [{ id: 'exp1', name: 'Internet', amount: -50 }]
@@ -163,7 +163,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-roommates-empty',
+          id: 'testroommatesempty',
           data: { ...validBaseData, roommates: [] }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -177,7 +177,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-roommates-non-array',
+          id: 'testroommatesnonarray',
           data: { ...validBaseData, roommates: 'not an array' }
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -191,7 +191,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-roommates-missing-fields',
+          id: 'testroommatesmissingfields',
           data: {
             ...validBaseData,
             roommates: [{ name: 'Alice' }] // Missing id and income
@@ -208,7 +208,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-roommates-negative-income',
+          id: 'testroommatesnegativeincome',
           data: {
             ...validBaseData,
             roommates: [{ id: 'roommate1', name: 'Alice', income: -1000 }]
@@ -225,7 +225,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-roommates-with-room-size',
+          id: 'testroommateswithroomsize',
           data: {
             ...validBaseData,
             roommates: [
@@ -244,7 +244,7 @@ describe('Data Validation Tests', () => {
       const request = new NextRequest('http://localhost:3000/api/share', {
         method: 'POST',
         body: JSON.stringify({
-          id: 'test-roommates-negative-room-size',
+          id: 'testroommatesnegativeroomsize',
           data: {
             ...validBaseData,
             roommates: [
