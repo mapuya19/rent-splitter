@@ -19,7 +19,7 @@ export default function Home() {
   const [utilities, setUtilities] = useState(0);
   const [customExpenses, setCustomExpenses] = useState<CustomExpense[]>([]);
   const [results, setResults] = useState<SplitResult[]>([]);
-  const [useRoomSizeSplit, setUseRoomSizeSplit] = useState(false);
+  const [useRoomSizeSplit, setUseRoomSizeSplit] = useState(true);
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
   // Calculate results whenever inputs change
@@ -158,18 +158,25 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
                 <div className="flex items-center justify-center mb-4">
                   <TwoStateToggle
-                    leftLabel="Income"
-                    rightLabel="Room Size"
-                    value={useRoomSizeSplit}
-                    onChange={setUseRoomSizeSplit}
+                    leftLabel="Room Size"
+                    rightLabel="Income"
+                    value={!useRoomSizeSplit}
+                    onChange={(value) => setUseRoomSizeSplit(!value)}
                   />
                 </div>
-                <p className="text-sm text-gray-600 text-center">
-                  {useRoomSizeSplit 
-                    ? "Rent will be split based on room square footage. Add room sizes below to use this method."
-                    : "Rent will be split based on annual income. Higher earners pay more rent."
-                  }
-                </p>
+                <div className="text-sm text-gray-600 space-y-2">
+                  {useRoomSizeSplit ? (
+                    <>
+                      <p className="font-medium text-gray-900 text-center">Room Size Split (Recommended)</p>
+                      <p>Best for <strong>friends or strangers</strong> living together. Rent is split based on room square footage, with adjustments for room features like private bathrooms, windows, and doors.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-gray-900 text-center">Income-Based Split</p>
+                      <p>Best for <strong>couples or families</strong> living together. Rent is split based on annual income - higher earners pay proportionally more.</p>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -216,18 +223,25 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
                 <div className="flex items-center justify-center mb-4">
                   <TwoStateToggle
-                    leftLabel="Income"
-                    rightLabel="Room Size"
-                    value={useRoomSizeSplit}
-                    onChange={setUseRoomSizeSplit}
+                    leftLabel="Room Size"
+                    rightLabel="Income"
+                    value={!useRoomSizeSplit}
+                    onChange={(value) => setUseRoomSizeSplit(!value)}
                   />
                 </div>
-                <p className="text-sm text-gray-600 text-center">
-                  {useRoomSizeSplit 
-                    ? "Rent will be split based on room square footage. Add room sizes below to use this method."
-                    : "Rent will be split based on annual income. Higher earners pay more rent."
-                  }
-                </p>
+                <div className="text-sm text-gray-600 space-y-2">
+                  {useRoomSizeSplit ? (
+                    <>
+                      <p className="font-medium text-gray-900 text-center">Room Size Split (Recommended)</p>
+                      <p>Best for <strong>friends or strangers</strong> living together. Rent is split based on room square footage, with adjustments for room features like private bathrooms, windows, and doors.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-gray-900 text-center">Income-Based Split</p>
+                      <p>Best for <strong>couples or families</strong> living together. Rent is split based on annual income - higher earners pay proportionally more.</p>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>

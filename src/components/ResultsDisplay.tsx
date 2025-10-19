@@ -23,13 +23,16 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
   const copyToClipboard = async () => {
     const text = `Rent Split Results\n` +
       `==================\n\n` +
-      results.map(result => 
-        `${result.roommateName}:\n` +
+      results.map(result => {
+        const baseRent = result.rentShare - result.adjustmentAmount;
+        return `${result.roommateName}:\n` +
         `  Total: ${formatCurrency(result.totalShare, selectedCurrency)}\n` +
-        `  - Rent Share: ${formatCurrency(result.rentShare, selectedCurrency)} (${Math.round(result.incomePercentage * 100)}% ${useRoomSizeSplit ? 'of total space' : 'of income'})\n` +
+        `  - Base Rent: ${formatCurrency(baseRent, selectedCurrency)} (${Math.round(result.incomePercentage * 100)}% ${useRoomSizeSplit ? 'of total space' : 'of income'})\n` +
+        (result.adjustmentAmount !== 0 ? `  - Room Adjustments: ${result.adjustmentAmount > 0 ? '+' : ''}${formatCurrency(result.adjustmentAmount, selectedCurrency)}\n` +
+        `  - Adjusted Rent: ${formatCurrency(result.rentShare, selectedCurrency)}\n` : '') +
         `  - Utilities: ${formatCurrency(result.utilitiesShare, selectedCurrency)}\n` +
-        (result.customExpensesShare > 0 ? `  - Other Expenses: ${formatCurrency(result.customExpensesShare, selectedCurrency)}\n` : '')
-      ).join('\n') +
+        (result.customExpensesShare > 0 ? `  - Other Expenses: ${formatCurrency(result.customExpensesShare, selectedCurrency)}\n` : '');
+      }).join('\n') +
       `\n\nTotal: ${formatCurrency(totalSplit, selectedCurrency)}`;
     
     await navigator.clipboard.writeText(text);
@@ -78,18 +81,43 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-gray-600">Rent Share</div>
-                  <div className="font-medium">{formatCurrency(result.rentShare, selectedCurrency)}</div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-600">Base Rent Share</div>
+                    <div className="font-medium">{formatCurrency(result.rentShare - result.adjustmentAmount, selectedCurrency)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Utilities Share</div>
+                    <div className="font-medium">{formatCurrency(result.utilitiesShare, selectedCurrency)}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-gray-600">Utilities Share</div>
-                  <div className="font-medium">{formatCurrency(result.utilitiesShare, selectedCurrency)}</div>
-                </div>
+                
+                {result.adjustmentAmount !== 0 && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-sm text-gray-600 mb-2">Room Adjustments</div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>Base Rent</span>
+                        <span>{formatCurrency(result.rentShare - result.adjustmentAmount, selectedCurrency)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Adjustments</span>
+                        <span className={`${result.adjustmentAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {result.adjustmentAmount > 0 ? '+' : ''}{formatCurrency(result.adjustmentAmount, selectedCurrency)}
+                        </span>
+                      </div>
+                      <div className="border-t pt-1 flex justify-between font-medium">
+                        <span>Adjusted Rent</span>
+                        <span>{formatCurrency(result.rentShare, selectedCurrency)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {result.customExpensesShare > 0 && (
-                  <div className="col-span-2">
-                    <div className="text-gray-600">Other Expenses Share</div>
+                  <div>
+                    <div className="text-gray-600 text-sm">Other Expenses Share</div>
                     <div className="font-medium">{formatCurrency(result.customExpensesShare, selectedCurrency)}</div>
                   </div>
                 )}
@@ -99,14 +127,10 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
           
           <div className="border-t pt-4">
             <div className="flex justify-between items-center">
-              <span className="font-semibold">Total Split:</span>
+              <span className="font-semibold">Total:</span>
               <span className="font-bold text-lg">
                 {formatCurrency(totalSplit, selectedCurrency)}
               </span>
-            </div>
-            <div className="flex justify-between items-center text-sm text-gray-600">
-              <span>Original Total:</span>
-              <span>{formatCurrency(totalRent + totalUtilities + totalCustomExpenses, selectedCurrency)}</span>
             </div>
           </div>
         </div>

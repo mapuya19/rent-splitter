@@ -1,4 +1,28 @@
-import { SplitResult, CalculationData } from '@/types';
+import { SplitResult, CalculationData, RoomAdjustments } from '@/types';
+
+// Helper function to calculate adjustment percentage based on room features
+function calculateAdjustmentPercentage(adjustments?: RoomAdjustments): number {
+  if (!adjustments) return 0;
+  
+  let adjustment = 0;
+  
+  // Private bathroom adds 15% to rent share
+  if (adjustments.hasPrivateBathroom) adjustment += 15;
+  
+  // No window reduces rent share by 10%
+  if (!adjustments.hasWindow) adjustment -= 10;
+  
+  // No door reduces rent share by 5%
+  if (!adjustments.hasDoor) adjustment -= 5;
+  
+  // Custom adjustment percentage (user-defined)
+  if (adjustments.adjustmentPercentage !== undefined) {
+    adjustment += adjustments.adjustmentPercentage;
+  }
+  
+  // Clamp adjustment between -50% and +50%
+  return Math.max(-50, Math.min(50, adjustment));
+}
 
 export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: boolean = false): SplitResult[] {
   const { totalRent, utilities, customExpenses, roommates } = data;
@@ -16,67 +40,107 @@ export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: bool
   const totalCustomExpenses = customExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   const customExpensesPerPerson = totalCustomExpenses / roommates.length;
   
-  let rentShare: number;
+  // Step 1: Calculate base rent shares
+  let baseRentShares: { roommate: any; baseShare: number; percentage: number }[] = [];
   
   if (hasRoomSizes) {
     // Split rent based on room size
     const totalRoomSize = roommates.reduce((sum, roommate) => sum + (roommate.roomSize || 0), 0);
     
-    return roommates.map(roommate => {
+    baseRentShares = roommates.map(roommate => {
       const roomSizePercentage = totalRoomSize > 0 ? (roommate.roomSize || 0) / totalRoomSize : 1 / roommates.length;
-      rentShare = totalRent * roomSizePercentage;
-      const totalShare = rentShare + utilitiesPerPerson + customExpensesPerPerson;
-      
-      return {
-        roommateId: roommate.id,
-        roommateName: roommate.name,
-        income: roommate.income,
-        incomePercentage: Math.round(roomSizePercentage * 100) / 100,
-        rentShare: Math.round(rentShare * 100) / 100,
-        utilitiesShare: Math.round(utilitiesPerPerson * 100) / 100,
-        customExpensesShare: Math.round(customExpensesPerPerson * 100) / 100,
-        totalShare: Math.round(totalShare * 100) / 100,
-      };
+      const baseShare = totalRent * roomSizePercentage;
+      return { roommate, baseShare, percentage: roomSizePercentage };
     });
   } else if (shouldUseEqualSplit) {
     // Equal split when room size mode is on but no room sizes provided
-    rentShare = totalRent / roommates.length;
+    const equalShare = totalRent / roommates.length;
     
-    return roommates.map(roommate => {
-      const totalShare = rentShare + utilitiesPerPerson + customExpensesPerPerson;
-      
-      return {
-        roommateId: roommate.id,
-        roommateName: roommate.name,
-        income: roommate.income,
-        incomePercentage: Math.round((1 / roommates.length) * 100) / 100,
-        rentShare: Math.round(rentShare * 100) / 100,
-        utilitiesShare: Math.round(utilitiesPerPerson * 100) / 100,
-        customExpensesShare: Math.round(customExpensesPerPerson * 100) / 100,
-        totalShare: Math.round(totalShare * 100) / 100,
-      };
-    });
+    baseRentShares = roommates.map(roommate => ({
+      roommate,
+      baseShare: equalShare,
+      percentage: 1 / roommates.length
+    }));
   } else {
     // Split rent based on income (original logic)
     const totalIncome = roommates.reduce((sum, roommate) => sum + roommate.income, 0);
     
-    return roommates.map(roommate => {
+    baseRentShares = roommates.map(roommate => {
       const incomePercentage = roommate.income / totalIncome;
-      rentShare = totalRent * incomePercentage;
-      const totalShare = rentShare + utilitiesPerPerson + customExpensesPerPerson;
+      const baseShare = totalRent * incomePercentage;
+      return { roommate, baseShare, percentage: incomePercentage };
+    });
+  }
+  
+  // Step 2: Apply adjustments to get adjusted shares
+  const adjustedShares = baseRentShares.map(({ roommate, baseShare, percentage }) => {
+    const adjustmentPercentage = calculateAdjustmentPercentage(roommate.adjustments);
+    const adjustmentAmount = baseShare * (adjustmentPercentage / 100);
+    const adjustedShare = baseShare + adjustmentAmount;
+    return { roommate, baseShare, adjustedShare, adjustmentAmount, percentage };
+  });
+  
+  // Step 3: Calculate total adjustments and redistribute
+  const totalAdjustments = adjustedShares.reduce((sum, { adjustmentAmount }) => sum + adjustmentAmount, 0);
+  const totalAdjustedRent = adjustedShares.reduce((sum, { adjustedShare }) => sum + adjustedShare, 0);
+  
+  // If total adjusted rent doesn't equal total rent, redistribute proportionally
+  let finalShares: SplitResult[] = [];
+  
+  if (Math.abs(totalAdjustedRent - totalRent) < 0.01) {
+    // No redistribution needed
+    finalShares = adjustedShares.map(({ roommate, adjustedShare, adjustmentAmount, percentage }) => {
+      const roundedRentShare = Math.round(adjustedShare * 100) / 100;
+      const roundedUtilitiesShare = Math.round(utilitiesPerPerson * 100) / 100;
+      const roundedCustomExpensesShare = Math.round(customExpensesPerPerson * 100) / 100;
+      const roundedAdjustmentAmount = Math.round(adjustmentAmount * 100) / 100;
+      
+      // Calculate total from rounded components to avoid rounding discrepancies
+      const totalShare = roundedRentShare + roundedUtilitiesShare + roundedCustomExpensesShare;
       
       return {
         roommateId: roommate.id,
         roommateName: roommate.name,
         income: roommate.income,
-        incomePercentage: Math.round(incomePercentage * 100) / 100,
-        rentShare: Math.round(rentShare * 100) / 100,
-        utilitiesShare: Math.round(utilitiesPerPerson * 100) / 100,
-        customExpensesShare: Math.round(customExpensesPerPerson * 100) / 100,
+        incomePercentage: Math.round(percentage * 100) / 100,
+        rentShare: roundedRentShare,
+        utilitiesShare: roundedUtilitiesShare,
+        customExpensesShare: roundedCustomExpensesShare,
+        adjustmentAmount: roundedAdjustmentAmount,
+        totalShare: Math.round(totalShare * 100) / 100,
+      };
+    });
+  } else {
+    // Redistribute to ensure total rent is preserved
+    const redistributionFactor = totalRent / totalAdjustedRent;
+    
+    finalShares = adjustedShares.map(({ roommate, baseShare, adjustedShare, adjustmentAmount, percentage }) => {
+      const redistributedShare = adjustedShare * redistributionFactor;
+      const finalAdjustmentAmount = redistributedShare - baseShare;
+      
+      const roundedRentShare = Math.round(redistributedShare * 100) / 100;
+      const roundedUtilitiesShare = Math.round(utilitiesPerPerson * 100) / 100;
+      const roundedCustomExpensesShare = Math.round(customExpensesPerPerson * 100) / 100;
+      const roundedAdjustmentAmount = Math.round(finalAdjustmentAmount * 100) / 100;
+      
+      // Calculate total from rounded components to avoid rounding discrepancies
+      const totalShare = roundedRentShare + roundedUtilitiesShare + roundedCustomExpensesShare;
+      
+      return {
+        roommateId: roommate.id,
+        roommateName: roommate.name,
+        income: roommate.income,
+        incomePercentage: Math.round(percentage * 100) / 100,
+        rentShare: roundedRentShare,
+        utilitiesShare: roundedUtilitiesShare,
+        customExpensesShare: roundedCustomExpensesShare,
+        adjustmentAmount: roundedAdjustmentAmount,
         totalShare: Math.round(totalShare * 100) / 100,
       };
     });
   }
+  
+  return finalShares;
 }
 
 

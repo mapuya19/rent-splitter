@@ -3,6 +3,15 @@ export interface Roommate {
   name: string;
   income: number;
   roomSize?: number; // Optional square footage
+  adjustments?: RoomAdjustments;
+}
+
+export interface RoomAdjustments {
+  hasPrivateBathroom: boolean;
+  hasWindow: boolean;
+  hasDoor: boolean;
+  isSharedBedroom: boolean; // For couples sharing one bedroom
+  adjustmentPercentage?: number; // Custom adjustment percentage (-50 to +50)
 }
 
 export interface CustomExpense {
@@ -28,6 +37,7 @@ export interface SplitResult {
   rentShare: number;
   utilitiesShare: number;
   customExpensesShare: number;
+  adjustmentAmount: number;
   totalShare: number;
 }
 

@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { NumberInput } from '@/components/ui/NumberInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Roommate } from '@/types';
+import { Roommate, RoomAdjustments } from '@/types';
+import { RoomAdjustmentsComponent } from '@/components/RoomAdjustments';
 
 interface RoommateFormProps {
   roommates: Roommate[];
@@ -73,6 +74,14 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
     );
   };
 
+  const updateRoommateAdjustments = (id: string, adjustments: RoomAdjustments) => {
+    onRoommatesChange(
+      roommates.map(roommate =>
+        roommate.id === id ? { ...roommate, adjustments } : roommate
+      )
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -80,43 +89,57 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
       </CardHeader>
       <CardContent className="space-y-4">
         {roommates.map((roommate) => (
-          <div key={roommate.id} className="flex gap-2 items-end">
-            <div className="flex-1">
-              <Input
-                label="Name"
-                value={roommate.name}
-                onChange={(e) => updateRoommate(roommate.id, 'name', e.target.value)}
-                placeholder="Roommate name"
-              />
+          <div key={roommate.id} className="space-y-3">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <Input
+                  label="Name"
+                  value={roommate.name}
+                  onChange={(e) => updateRoommate(roommate.id, 'name', e.target.value)}
+                  placeholder="Roommate name"
+                />
+              </div>
+              {!useRoomSizeSplit && (
+                <div className="flex-1">
+                  <NumberInput
+                    label="Annual Income"
+                    value={roommate.income}
+                    onValueChange={(value) => updateRoommate(roommate.id, 'income', value)}
+                    placeholder="0"
+                  />
+                </div>
+              )}
+              {useRoomSizeSplit && (
+                <div className="flex-1">
+                  <NumberInput
+                    label="Room Size (sq ft)"
+                    value={roommate.roomSize}
+                    onValueChange={(value) => updateRoommate(roommate.id, 'roomSize', value)}
+                    placeholder="0"
+                  />
+                </div>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeRoommate(roommate.id)}
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-            {!useRoomSizeSplit && (
-              <div className="flex-1">
-                <NumberInput
-                  label="Annual Income"
-                  value={roommate.income}
-                  onValueChange={(value) => updateRoommate(roommate.id, 'income', value)}
-                  placeholder="0"
-                />
-              </div>
-            )}
             {useRoomSizeSplit && (
-              <div className="flex-1">
-                <NumberInput
-                  label="Room Size (sq ft)"
-                  value={roommate.roomSize}
-                  onValueChange={(value) => updateRoommate(roommate.id, 'roomSize', value)}
-                  placeholder="0"
-                />
-              </div>
+              <RoomAdjustmentsComponent
+                adjustments={roommate.adjustments || {
+                  hasPrivateBathroom: false,
+                  hasWindow: true, // Default to having window (so "No Window" toggle is off)
+                  hasDoor: true,   // Default to having door (so "No Door" toggle is off)
+                  isSharedBedroom: false,
+                  adjustmentPercentage: 0,
+                }}
+                onAdjustmentsChange={(adjustments) => updateRoommateAdjustments(roommate.id, adjustments)}
+              />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => removeRoommate(roommate.id)}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         ))}
         
