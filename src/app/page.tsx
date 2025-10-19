@@ -9,6 +9,7 @@ import { TwoStateToggle } from '@/components/ui/TwoStateToggle';
 import { Roommate, SplitResult, CalculationData, CustomExpense } from '@/types';
 import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
 import { Calculator, Users, DollarSign } from 'lucide-react';
+import { Footer } from '@/components/Footer';
 
 export default function Home() {
   const [roommates, setRoommates] = useState<Roommate[]>([]);
@@ -106,7 +107,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -233,6 +234,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
