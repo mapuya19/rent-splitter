@@ -5,6 +5,7 @@ import { RoommateForm } from '@/components/RoommateForm';
 import { RentForm } from '@/components/RentForm';
 import { CustomExpensesForm } from '@/components/CustomExpensesForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
+import { Toggle } from '@/components/ui/Toggle';
 import { Roommate, SplitResult, CalculationData, CustomExpense } from '@/types';
 import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
 import { Calculator, Users, DollarSign } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Home() {
   const [customExpenses, setCustomExpenses] = useState<CustomExpense[]>([]);
   const [results, setResults] = useState<SplitResult[]>([]);
   const [shareableId, setShareableId] = useState<string | null>(null);
+  const [useRoomSizeSplit, setUseRoomSizeSplit] = useState(false);
 
   // Calculate results whenever inputs change
   useEffect(() => {
@@ -26,12 +28,12 @@ export default function Home() {
         customExpenses,
         roommates,
       };
-      const splitResults = calculateRentSplit(calculationData);
+      const splitResults = calculateRentSplit(calculationData, useRoomSizeSplit);
       setResults(splitResults);
     } else {
       setResults([]);
     }
-  }, [roommates, totalRent, utilities, customExpenses]);
+  }, [roommates, totalRent, utilities, customExpenses, useRoomSizeSplit]);
 
   const handleShare = () => {
     const id = generateShareableId();
@@ -48,8 +50,10 @@ export default function Home() {
     localStorage.setItem(`rent-split-${id}`, JSON.stringify(calculationData));
     
     // Copy shareable link to clipboard
-    const shareableUrl = `${window.location.origin}?share=${id}`;
-    navigator.clipboard.writeText(shareableUrl);
+    const shareableUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}?share=${id}`;
+    if (typeof window !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(shareableUrl);
+    }
     
     // Show success message (you could add a toast notification here)
     alert('Shareable link copied to clipboard!');
@@ -57,20 +61,22 @@ export default function Home() {
 
   // Load shared calculation on page load
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shareId = urlParams.get('share');
-    
-    if (shareId) {
-      const storedData = localStorage.getItem(`rent-split-${shareId}`);
-      if (storedData) {
-        try {
-          const calculationData: CalculationData = JSON.parse(storedData);
-          setRoommates(calculationData.roommates);
-          setTotalRent(calculationData.totalRent);
-          setUtilities(calculationData.utilities);
-          setCustomExpenses(calculationData.customExpenses || []);
-        } catch (error) {
-          console.error('Failed to load shared calculation:', error);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const shareId = urlParams.get('share');
+      
+      if (shareId) {
+        const storedData = localStorage.getItem(`rent-split-${shareId}`);
+        if (storedData) {
+          try {
+            const calculationData: CalculationData = JSON.parse(storedData);
+            setRoommates(calculationData.roommates);
+            setTotalRent(calculationData.totalRent);
+            setUtilities(calculationData.utilities);
+            setCustomExpenses(calculationData.customExpenses || []);
+          } catch (error) {
+            console.error('Failed to load shared calculation:', error);
+          }
         }
       }
     }
@@ -86,9 +92,12 @@ export default function Home() {
             <h1 className="text-3xl font-bold text-gray-900">Rent Splitter</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Split rent proportionally based on income and utilities evenly between roommates. 
+            Split rent proportionally based on income or room size, and utilities evenly between roommates. 
             Generate shareable links to collaborate with your roommates.
           </p>
+          <div className="mt-4 text-sm text-gray-500">
+            💡 <strong>Annual Income:</strong> Enter your yearly salary before taxes. The app will calculate monthly amounts automatically.
+          </div>
         </div>
 
         {/* Main Content */}
@@ -106,6 +115,23 @@ export default function Home() {
               customExpenses={customExpenses}
               onCustomExpensesChange={setCustomExpenses}
             />
+            
+            {/* Split Method Toggle */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
+              <Toggle
+                label="Split by Room Size"
+                description={useRoomSizeSplit ? "Rent split by square footage" : "Rent split by income"}
+                checked={useRoomSizeSplit}
+                onChange={(e) => setUseRoomSizeSplit(e.target.checked)}
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                {useRoomSizeSplit 
+                  ? "Rent will be split based on room square footage. Add room sizes below to use this method."
+                  : "Rent will be split based on annual income. Higher earners pay more rent."
+                }
+              </p>
+            </div>
             
             <RoommateForm
               roommates={roommates}
@@ -148,8 +174,8 @@ export default function Home() {
               <div className="ml-3">
                 <h3 className="font-medium text-gray-900">Rent Split</h3>
                 <p className="text-sm text-gray-600">
-                  Rent is split proportionally based on each roommate's income. 
-                  Higher earners pay more rent.
+                  Use the toggle to choose between income-based splitting (higher earners pay more) 
+                  or room size-based splitting (larger rooms pay more). Annual income is used for calculations.
                 </p>
               </div>
             </div>

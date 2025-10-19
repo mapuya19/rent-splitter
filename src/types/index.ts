@@ -2,6 +2,7 @@ export interface Roommate {
   id: string;
   name: string;
   income: number;
+  roomSize?: number; // Optional square footage
 }
 
 export interface CustomExpense {

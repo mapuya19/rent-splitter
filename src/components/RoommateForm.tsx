@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { NumberInput } from '@/components/ui/NumberInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Roommate } from '@/types';
 
@@ -13,7 +14,7 @@ interface RoommateFormProps {
 }
 
 export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps) {
-  const [newRoommate, setNewRoommate] = useState({ name: '', income: '' });
+  const [newRoommate, setNewRoommate] = useState({ name: '', income: '', roomSize: '' });
 
   const addRoommate = () => {
     if (newRoommate.name.trim() && newRoommate.income) {
@@ -23,15 +24,16 @@ export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps
           id: Math.random().toString(36).substring(2, 15),
           name: newRoommate.name.trim(),
           income,
+          roomSize: newRoommate.roomSize ? parseFloat(newRoommate.roomSize) : undefined,
         };
         onRoommatesChange([...roommates, roommate]);
-        setNewRoommate({ name: '', income: '' });
+        setNewRoommate({ name: '', income: '', roomSize: '' });
       }
     }
   };
 
   // Handle new roommate input changes
-  const handleNewRoommateChange = (field: 'name' | 'income', value: string) => {
+  const handleNewRoommateChange = (field: 'name' | 'income' | 'roomSize', value: string) => {
     setNewRoommate({ ...newRoommate, [field]: value });
   };
 
@@ -44,9 +46,10 @@ export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps
           id: Math.random().toString(36).substring(2, 15),
           name: newRoommate.name.trim(),
           income,
+          roomSize: newRoommate.roomSize ? parseFloat(newRoommate.roomSize) : undefined,
         };
         onRoommatesChange([...roommates, roommate]);
-        setNewRoommate({ name: '', income: '' });
+        setNewRoommate({ name: '', income: '', roomSize: '' });
       }
     }
   };
@@ -80,12 +83,19 @@ export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps
               />
             </div>
             <div className="flex-1">
-              <Input
-                label="Monthly Income"
-                type="number"
-                value={roommate.income || ''}
-                onChange={(e) => updateRoommate(roommate.id, 'income', parseFloat(e.target.value) || 0)}
+              <NumberInput
+                label="Annual Income"
+                value={roommate.income}
+                onValueChange={(value) => updateRoommate(roommate.id, 'income', value)}
                 placeholder="0"
+              />
+            </div>
+            <div className="flex-1">
+              <NumberInput
+                label="Room Size (sq ft)"
+                value={roommate.roomSize}
+                onValueChange={(value) => updateRoommate(roommate.id, 'roomSize', value)}
+                placeholder="Optional"
               />
             </div>
             <Button
@@ -110,13 +120,21 @@ export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps
               />
             </div>
             <div className="flex-1">
-              <Input
-                label="Monthly Income"
-                type="number"
+              <NumberInput
+                label="Annual Income"
                 value={newRoommate.income}
-                onChange={(e) => handleNewRoommateChange('income', e.target.value)}
+                onValueChange={(value) => handleNewRoommateChange('income', value.toString())}
                 onBlur={handleNewRoommateBlur}
                 placeholder="0"
+              />
+            </div>
+            <div className="flex-1">
+              <NumberInput
+                label="Room Size (sq ft)"
+                value={newRoommate.roomSize}
+                onValueChange={(value) => handleNewRoommateChange('roomSize', value.toString())}
+                onBlur={handleNewRoommateBlur}
+                placeholder="Optional"
               />
             </div>
           <Button

@@ -24,7 +24,7 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
       results.map(result => 
         `${result.roommateName}:\n` +
         `  Total: ${formatCurrency(result.totalShare)}\n` +
-        `  - Rent Share: ${formatCurrency(result.rentShare)} (${Math.round(result.incomePercentage * 100)}% of income)\n` +
+        `  - Rent Share: ${formatCurrency(result.rentShare)} (${Math.round(result.incomePercentage * 100)}%)\n` +
         `  - Utilities: ${formatCurrency(result.utilitiesShare)}\n` +
         (result.customExpensesShare > 0 ? `  - Other Expenses: ${formatCurrency(result.customExpensesShare)}\n` : '')
       ).join('\n') +

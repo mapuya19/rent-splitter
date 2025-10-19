@@ -1,6 +1,6 @@
 'use client';
 
-import { Input } from '@/components/ui/Input';
+import { NumberInput } from '@/components/ui/NumberInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 interface RentFormProps {
@@ -17,18 +17,16 @@ export function RentForm({ totalRent, utilities, onRentChange, onUtilitiesChange
         <CardTitle>Rent & Utilities</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Input
+        <NumberInput
           label="Total Monthly Rent"
-          type="number"
-          value={totalRent || ''}
-          onChange={(e) => onRentChange(parseFloat(e.target.value) || 0)}
+          value={totalRent}
+          onValueChange={onRentChange}
           placeholder="0"
         />
-        <Input
+        <NumberInput
           label="Monthly Utilities"
-          type="number"
-          value={utilities || ''}
-          onChange={(e) => onUtilitiesChange(parseFloat(e.target.value) || 0)}
+          value={utilities}
+          onValueChange={onUtilitiesChange}
           placeholder="0"
         />
       </CardContent>

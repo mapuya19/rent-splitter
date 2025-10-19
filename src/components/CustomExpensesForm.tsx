@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { NumberInput } from '@/components/ui/NumberInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { CustomExpense } from '@/types';
 
@@ -60,11 +61,10 @@ export function CustomExpensesForm({ customExpenses, onCustomExpensesChange }: C
               />
             </div>
             <div className="flex-1">
-              <Input
+              <NumberInput
                 label="Amount"
-                type="number"
-                value={expense.amount || ''}
-                onChange={(e) => updateExpense(expense.id, 'amount', parseFloat(e.target.value) || 0)}
+                value={expense.amount}
+                onValueChange={(value) => updateExpense(expense.id, 'amount', value)}
                 placeholder="0"
               />
             </div>
@@ -89,11 +89,10 @@ export function CustomExpensesForm({ customExpenses, onCustomExpensesChange }: C
             />
           </div>
           <div className="flex-1">
-            <Input
+            <NumberInput
               label="Amount"
-              type="number"
               value={newExpense.amount}
-              onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+              onValueChange={(value) => setNewExpense({ ...newExpense, amount: value.toString() })}
               placeholder="0"
             />
           </div>
