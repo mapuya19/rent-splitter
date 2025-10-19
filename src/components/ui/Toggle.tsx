@@ -7,7 +7,7 @@ interface ToggleProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'
 }
 
 const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
-  ({ className, label, description, ...props }, ref) => {
+  ({ label, description, ...props }, ref) => {
     return (
       <div className="space-y-2">
         {label && (

@@ -50,7 +50,7 @@ export function CustomExpensesForm({ customExpenses, onCustomExpensesChange }: C
         <p className="text-sm text-gray-600">These will be split evenly between all roommates</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {customExpenses.map((expense, index) => (
+        {customExpenses.map((expense) => (
           <div key={expense.id} className="flex gap-2 items-end">
             <div className="flex-1">
               <Input

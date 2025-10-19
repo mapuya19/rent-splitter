@@ -16,7 +16,6 @@ export default function Home() {
   const [utilities, setUtilities] = useState(0);
   const [customExpenses, setCustomExpenses] = useState<CustomExpense[]>([]);
   const [results, setResults] = useState<SplitResult[]>([]);
-  const [shareableId, setShareableId] = useState<string | null>(null);
   const [useRoomSizeSplit, setUseRoomSizeSplit] = useState(false);
 
   // Calculate results whenever inputs change
@@ -37,7 +36,6 @@ export default function Home() {
 
   const handleShare = () => {
     const id = generateShareableId();
-    setShareableId(id);
     
     // Store calculation data in localStorage for sharing
     const calculationData: CalculationData = {

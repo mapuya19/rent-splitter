@@ -3,6 +3,7 @@ import { clsx } from 'clsx';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   // Card-specific props can be added here if needed
+  children?: React.ReactNode;
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(

@@ -1,4 +1,4 @@
-import { Roommate, SplitResult, CalculationData } from '@/types';
+import { SplitResult, CalculationData } from '@/types';
 
 export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: boolean = false): SplitResult[] {
   const { totalRent, utilities, customExpenses, roommates } = data;

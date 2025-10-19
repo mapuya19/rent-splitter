@@ -73,7 +73,7 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
         <CardTitle>Roommates</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {roommates.map((roommate, index) => (
+        {roommates.map((roommate) => (
           <div key={roommate.id} className="flex gap-2 items-end">
             <div className="flex-1">
               <Input
