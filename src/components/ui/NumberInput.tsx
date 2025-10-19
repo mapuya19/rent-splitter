@@ -34,13 +34,14 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Allow keyboard shortcuts (Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X on Windows/Linux)
+      // and (Cmd+A, Cmd+C, Cmd+V, Cmd+X on macOS) - don't prevent default
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+        return; // Let browser handle these naturally
+      }
+      
       // Allow: backspace, delete, tab, escape, enter
       if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
-          // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-          (e.keyCode === 65 && e.ctrlKey === true) ||
-          (e.keyCode === 67 && e.ctrlKey === true) ||
-          (e.keyCode === 86 && e.ctrlKey === true) ||
-          (e.keyCode === 88 && e.ctrlKey === true) ||
           // Allow: home, end, left, right, down, up
           (e.keyCode >= 35 && e.keyCode <= 40)) {
         return;

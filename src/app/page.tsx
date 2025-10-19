@@ -5,6 +5,7 @@ import { RoommateForm } from '@/components/RoommateForm';
 import { RentForm } from '@/components/RentForm';
 import { CustomExpensesForm } from '@/components/CustomExpensesForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
+import { CurrencySelector } from '@/components/CurrencySelector';
 import { TwoStateToggle } from '@/components/ui/TwoStateToggle';
 import { Roommate, SplitResult, CalculationData, CustomExpense } from '@/types';
 import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
@@ -18,6 +19,7 @@ export default function Home() {
   const [customExpenses, setCustomExpenses] = useState<CustomExpense[]>([]);
   const [results, setResults] = useState<SplitResult[]>([]);
   const [useRoomSizeSplit, setUseRoomSizeSplit] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
   // Calculate results whenever inputs change
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function Home() {
         utilities,
         customExpenses,
         roommates,
+        currency: selectedCurrency,
       };
       const splitResults = calculateRentSplit(calculationData, useRoomSizeSplit);
       setResults(splitResults);
@@ -140,6 +143,11 @@ export default function Home() {
               onCustomExpensesChange={setCustomExpenses}
             />
             
+            <CurrencySelector
+              selectedCurrency={selectedCurrency}
+              onCurrencyChange={setSelectedCurrency}
+            />
+            
             {/* Split Method Toggle */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
@@ -175,6 +183,7 @@ export default function Home() {
                 totalUtilities={utilities}
                 totalCustomExpenses={customExpenses.reduce((sum, expense) => sum + expense.amount, 0)}
                 useRoomSizeSplit={useRoomSizeSplit}
+                selectedCurrency={selectedCurrency}
                 onShare={handleShare}
               />
             ) : (

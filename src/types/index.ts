@@ -36,4 +36,12 @@ export interface CalculationData {
   utilities: number;
   customExpenses: CustomExpense[];
   roommates: Roommate[];
+  currency?: string;
+}
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  locale: string;
 }

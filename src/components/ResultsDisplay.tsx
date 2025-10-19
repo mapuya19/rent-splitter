@@ -13,10 +13,11 @@ interface ResultsDisplayProps {
   totalUtilities: number;
   totalCustomExpenses: number;
   useRoomSizeSplit: boolean;
+  selectedCurrency: string;
   onShare: () => void;
 }
 
-export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustomExpenses, useRoomSizeSplit, onShare }: ResultsDisplayProps) {
+export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustomExpenses, useRoomSizeSplit, selectedCurrency, onShare }: ResultsDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -24,12 +25,12 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
       `==================\n\n` +
       results.map(result => 
         `${result.roommateName}:\n` +
-        `  Total: ${formatCurrency(result.totalShare)}\n` +
-        `  - Rent Share: ${formatCurrency(result.rentShare)} (${Math.round(result.incomePercentage * 100)}% ${useRoomSizeSplit ? 'of total space' : 'of income'})\n` +
-        `  - Utilities: ${formatCurrency(result.utilitiesShare)}\n` +
-        (result.customExpensesShare > 0 ? `  - Other Expenses: ${formatCurrency(result.customExpensesShare)}\n` : '')
+        `  Total: ${formatCurrency(result.totalShare, selectedCurrency)}\n` +
+        `  - Rent Share: ${formatCurrency(result.rentShare, selectedCurrency)} (${Math.round(result.incomePercentage * 100)}% ${useRoomSizeSplit ? 'of total space' : 'of income'})\n` +
+        `  - Utilities: ${formatCurrency(result.utilitiesShare, selectedCurrency)}\n` +
+        (result.customExpensesShare > 0 ? `  - Other Expenses: ${formatCurrency(result.customExpensesShare, selectedCurrency)}\n` : '')
       ).join('\n') +
-      `\n\nTotal: ${formatCurrency(totalSplit)}`;
+      `\n\nTotal: ${formatCurrency(totalSplit, selectedCurrency)}`;
     
     await navigator.clipboard.writeText(text);
     setCopied(true);
@@ -69,7 +70,7 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
                 <h3 className="font-semibold text-lg">{result.roommateName}</h3>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-600">
-                    {formatCurrency(result.totalShare)}
+                    {formatCurrency(result.totalShare, selectedCurrency)}
                   </div>
                   <div className="text-sm text-gray-500">
                     {Math.round(result.incomePercentage * 100)}% {useRoomSizeSplit ? 'of total space' : 'of income'}
@@ -80,16 +81,16 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-gray-600">Rent Share</div>
-                  <div className="font-medium">{formatCurrency(result.rentShare)}</div>
+                  <div className="font-medium">{formatCurrency(result.rentShare, selectedCurrency)}</div>
                 </div>
                 <div>
                   <div className="text-gray-600">Utilities Share</div>
-                  <div className="font-medium">{formatCurrency(result.utilitiesShare)}</div>
+                  <div className="font-medium">{formatCurrency(result.utilitiesShare, selectedCurrency)}</div>
                 </div>
                 {result.customExpensesShare > 0 && (
                   <div className="col-span-2">
                     <div className="text-gray-600">Other Expenses Share</div>
-                    <div className="font-medium">{formatCurrency(result.customExpensesShare)}</div>
+                    <div className="font-medium">{formatCurrency(result.customExpensesShare, selectedCurrency)}</div>
                   </div>
                 )}
               </div>
@@ -100,12 +101,12 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
             <div className="flex justify-between items-center">
               <span className="font-semibold">Total Split:</span>
               <span className="font-bold text-lg">
-                {formatCurrency(totalSplit)}
+                {formatCurrency(totalSplit, selectedCurrency)}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm text-gray-600">
               <span>Original Total:</span>
-              <span>{formatCurrency(totalRent + totalUtilities + totalCustomExpenses)}</span>
+              <span>{formatCurrency(totalRent + totalUtilities + totalCustomExpenses, selectedCurrency)}</span>
             </div>
           </div>
         </div>
