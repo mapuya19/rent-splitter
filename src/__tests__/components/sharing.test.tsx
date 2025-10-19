@@ -17,8 +17,8 @@ Object.assign(navigator, {
 });
 
 // Mock window.location
-delete (window as any).location;
-window.location = { origin: 'http://localhost:3000' } as any;
+delete (window as unknown).location;
+window.location = { origin: 'http://localhost:3000' } as Location;
 
 describe('Sharing Functionality', () => {
   beforeEach(() => {
@@ -177,11 +177,11 @@ describe('Sharing Functionality', () => {
 
     // Mock URL with share parameter
     const originalLocation = window.location;
-    delete (window as any).location;
+    delete (window as unknown).location;
     window.location = {
       ...originalLocation,
       search: '?share=test123',
-    } as any;
+    } as Location;
 
     render(<Home />);
 

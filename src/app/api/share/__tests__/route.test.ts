@@ -25,7 +25,8 @@ const invalidCalculationData = {
 describe('/api/share', () => {
   beforeEach(() => {
     // Clear the in-memory storage before each test
-    const shareData = new Map();
+    // Note: In a real test environment, you'd want to clear the actual storage
+    // For now, we'll rely on the test isolation
   });
 
   describe('POST /api/share', () => {

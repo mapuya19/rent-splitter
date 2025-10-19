@@ -6,7 +6,7 @@ import { CalculationData } from '@/types';
 const shareData = new Map<string, { data: CalculationData; createdAt: string }>();
 
 // Data validation schemas
-const validateCalculationData = (data: any): data is CalculationData => {
+const validateCalculationData = (data: unknown): data is CalculationData => {
   if (!data || typeof data !== 'object') return false;
   
   // Validate totalRent
