@@ -34,10 +34,10 @@ export default function Home() {
     }
   }, [roommates, totalRent, utilities, customExpenses, useRoomSizeSplit]);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const id = generateShareableId();
     
-    // Store calculation data in localStorage for sharing
+    // Store calculation data on server for sharing
     const calculationData: CalculationData = {
       totalRent,
       utilities,
@@ -45,39 +45,64 @@ export default function Home() {
       roommates,
     };
     
-    localStorage.setItem(`rent-split-${id}`, JSON.stringify(calculationData));
-    
-    // Copy shareable link to clipboard
-    const shareableUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}?share=${id}`;
-    if (typeof window !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(shareableUrl);
+    try {
+      const response = await fetch('/api/share', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          data: calculationData,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to store share data');
+      }
+      
+      // Copy shareable link to clipboard
+      const shareableUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}?share=${id}`;
+      if (typeof window !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(shareableUrl);
+      }
+      
+      // Show success message (you could add a toast notification here)
+      alert('Shareable link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to create shareable link:', error);
+      alert('Failed to create shareable link. Please try again.');
     }
-    
-    // Show success message (you could add a toast notification here)
-    alert('Shareable link copied to clipboard!');
   };
 
   // Load shared calculation on page load
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shareId = urlParams.get('share');
-      
-      if (shareId) {
-        const storedData = localStorage.getItem(`rent-split-${shareId}`);
-        if (storedData) {
+    const loadSharedData = async () => {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareId = urlParams.get('share');
+        
+        if (shareId) {
           try {
-            const calculationData: CalculationData = JSON.parse(storedData);
-            setRoommates(calculationData.roommates);
-            setTotalRent(calculationData.totalRent);
-            setUtilities(calculationData.utilities);
-            setCustomExpenses(calculationData.customExpenses || []);
+            const response = await fetch(`/api/share?id=${shareId}`);
+            if (response.ok) {
+              const result = await response.json();
+              const calculationData: CalculationData = result.data;
+              setRoommates(calculationData.roommates);
+              setTotalRent(calculationData.totalRent);
+              setUtilities(calculationData.utilities);
+              setCustomExpenses(calculationData.customExpenses || []);
+            } else {
+              console.error('Failed to load shared calculation:', response.statusText);
+            }
           } catch (error) {
             console.error('Failed to load shared calculation:', error);
           }
         }
       }
-    }
+    };
+    
+    loadSharedData();
   }, []);
 
   return (
