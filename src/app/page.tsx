@@ -36,7 +36,7 @@ export default function Home() {
     } else {
       setResults([]);
     }
-  }, [roommates, totalRent, utilities, customExpenses, useRoomSizeSplit]);
+  }, [roommates, totalRent, utilities, customExpenses, useRoomSizeSplit, selectedCurrency]);
 
   const handleShare = async () => {
     const id = generateShareableId();

@@ -23,7 +23,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           ref={ref}
-          onPaste={(e) => {
+          onPaste={() => {
             // Allow default paste behavior
             console.log('Paste event triggered');
           }}

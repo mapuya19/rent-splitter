@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
-import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY } from '@/utils/currency';
+import { SUPPORTED_CURRENCIES } from '@/utils/currency';
 
 interface CurrencySelectorProps {
   selectedCurrency: string;
