@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -17,7 +17,11 @@ export const metadata: Metadata = {
   description: "Split rent proportionally based on income and utilities evenly between roommates. Generate shareable links to collaborate with your roommates.",
   keywords: ["rent", "split", "roommates", "utilities", "calculator", "fair"],
   authors: [{ name: "Rent Splitter" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
