@@ -27,16 +27,18 @@
    - Add: `NEXT_PUBLIC_APP_URL` = `https://your-app-name.vercel.app`
 
 ### Shareable Links
-The shareable links will work automatically in production. The app uses:
-- `window.location.origin` to get the current domain
-- `localStorage` for data persistence
-- URL parameters to share calculations
+The shareable links work automatically in production using URL-based sharing:
+- **No database required** - all data is encoded in the URL
+- **Base64 encoding** - calculation data is safely encoded in URL parameters
+- **Complete data sharing** - includes currency, split method, and all calculation data
+- **Works offline** - shared links work without server dependencies
 
 ### Features Included
 - ✅ Square footage-based rent splitting
 - ✅ Income-based rent splitting (fallback)
 - ✅ Even utilities and expenses splitting
-- ✅ Shareable links with localStorage
+- ✅ URL-based shareable links (no database needed)
+- ✅ Complete data sharing (currency, split method, all calculations)
 - ✅ Responsive design
 - ✅ Copy to clipboard functionality
 

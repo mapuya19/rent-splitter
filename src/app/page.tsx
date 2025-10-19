@@ -8,7 +8,8 @@ import { ResultsDisplay } from '@/components/ResultsDisplay';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { TwoStateToggle } from '@/components/ui/TwoStateToggle';
 import { Roommate, SplitResult, CalculationData, CustomExpense } from '@/types';
-import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
+import { calculateRentSplit } from '@/utils/calculations';
+import { compressCalculationData, decompressCalculationData } from '@/utils/compression';
 import { Calculator, Users, DollarSign } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 
@@ -39,40 +40,31 @@ export default function Home() {
   }, [roommates, totalRent, utilities, customExpenses, useRoomSizeSplit, selectedCurrency]);
 
   const handleShare = async () => {
-    const id = generateShareableId();
-    
-    // Store calculation data on server for sharing
+    // Prepare calculation data for sharing
     const calculationData: CalculationData = {
       totalRent,
       utilities,
       customExpenses,
       roommates,
+      currency: selectedCurrency,
+      useRoomSizeSplit,
     };
     
     try {
-      const response = await fetch('/api/share', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id,
-          data: calculationData,
-        }),
-      });
+      // Compress data for shorter URLs
+      const compressedData = compressCalculationData(calculationData);
       
-      if (!response.ok) {
-        throw new Error('Failed to store share data');
-      }
+      // Create shareable URL with compressed data
+      const shareableUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}?data=${compressedData}`;
       
-      // Copy shareable link to clipboard
-      const shareableUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}?share=${id}`;
       if (typeof window !== 'undefined' && navigator.clipboard) {
         navigator.clipboard.writeText(shareableUrl);
       }
       
-      // Show success message (you could add a toast notification here)
-      alert('Shareable link copied to clipboard!');
+      // Show success message with compression info
+      const originalLength = JSON.stringify(calculationData).length;
+      const compressionRatio = Math.round((1 - compressedData.length / originalLength) * 100);
+      alert(`Shareable link copied to clipboard!\n\nURL compressed by ${compressionRatio}% (${originalLength} → ${compressedData.length} chars)`);
     } catch (error) {
       console.error('Failed to create shareable link:', error);
       alert('Failed to create shareable link. Please try again.');
@@ -81,26 +73,37 @@ export default function Home() {
 
   // Load shared calculation on page load
   useEffect(() => {
-    const loadSharedData = async () => {
+    const loadSharedData = () => {
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
-        const shareId = urlParams.get('share');
+        const encodedData = urlParams.get('data');
         
-        if (shareId) {
+        if (encodedData) {
           try {
-            const response = await fetch(`/api/share?id=${shareId}`);
-            if (response.ok) {
-              const result = await response.json();
-              const calculationData: CalculationData = result.data;
-              setRoommates(calculationData.roommates);
-              setTotalRent(calculationData.totalRent);
-              setUtilities(calculationData.utilities);
-              setCustomExpenses(calculationData.customExpenses || []);
-            } else {
-              console.error('Failed to load shared calculation:', response.statusText);
+            // Decompress data
+            const calculationData: CalculationData = decompressCalculationData(encodedData);
+            
+            // Load the shared data into the form
+            setRoommates(calculationData.roommates);
+            setTotalRent(calculationData.totalRent);
+            setUtilities(calculationData.utilities);
+            setCustomExpenses(calculationData.customExpenses || []);
+            
+            // Load currency and split method if available
+            if (calculationData.currency) {
+              setSelectedCurrency(calculationData.currency);
             }
+            if (calculationData.useRoomSizeSplit !== undefined) {
+              setUseRoomSizeSplit(calculationData.useRoomSizeSplit);
+            }
+            
+            // Clean up URL to remove the data parameter
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('data');
+            window.history.replaceState({}, '', newUrl.toString());
           } catch (error) {
             console.error('Failed to load shared calculation:', error);
+            alert('Invalid shared data. Please check the link and try again.');
           }
         }
       }

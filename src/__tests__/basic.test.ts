@@ -2,7 +2,7 @@
  * Basic tests to verify the testing setup works
  */
 
-import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
+import { calculateRentSplit } from '@/utils/calculations';
 import { formatCurrency } from '@/utils/currency';
 
 describe('Basic Functionality Tests', () => {
@@ -30,19 +30,6 @@ describe('Basic Functionality Tests', () => {
     });
   });
 
-  describe('generateShareableId', () => {
-    it('should generate a string ID', () => {
-      const id = generateShareableId();
-      expect(typeof id).toBe('string');
-      expect(id.length).toBeGreaterThan(0);
-    });
-
-    it('should generate unique IDs', () => {
-      const id1 = generateShareableId();
-      const id2 = generateShareableId();
-      expect(id1).not.toBe(id2);
-    });
-  });
 
   describe('formatCurrency', () => {
     it('should format currency correctly', () => {

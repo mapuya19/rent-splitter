@@ -1,4 +1,4 @@
-import { calculateRentSplit, generateShareableId } from '../calculations';
+import { calculateRentSplit } from '../calculations';
 import { formatCurrency } from '../currency';
 import { CalculationData } from '@/types';
 
@@ -148,29 +148,6 @@ describe('calculations', () => {
     });
   });
 
-  describe('generateShareableId', () => {
-    it('should generate a string', () => {
-      const id = generateShareableId();
-      expect(typeof id).toBe('string');
-    });
-
-    it('should generate different IDs on multiple calls', () => {
-      const id1 = generateShareableId();
-      const id2 = generateShareableId();
-      expect(id1).not.toBe(id2);
-    });
-
-    it('should generate IDs with reasonable length', () => {
-      const id = generateShareableId();
-      expect(id.length).toBeGreaterThan(10);
-      expect(id.length).toBeLessThan(50);
-    });
-
-    it('should generate alphanumeric IDs', () => {
-      const id = generateShareableId();
-      expect(/^[a-zA-Z0-9]+$/.test(id)).toBe(true);
-    });
-  });
 
   describe('formatCurrency', () => {
     it('should format positive numbers correctly', () => {

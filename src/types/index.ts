@@ -37,6 +37,7 @@ export interface CalculationData {
   customExpenses: CustomExpense[];
   roommates: Roommate[];
   currency?: string;
+  useRoomSizeSplit?: boolean;
 }
 
 export interface Currency {
