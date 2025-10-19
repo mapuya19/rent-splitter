@@ -18,14 +18,17 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
   const [newRoommate, setNewRoommate] = useState({ name: '', income: '', roomSize: '' });
 
   const addRoommate = () => {
-    if (newRoommate.name.trim() && newRoommate.income) {
-      const income = parseFloat(newRoommate.income);
-      if (income > 0) {
+    const hasRequiredField = useRoomSizeSplit ? newRoommate.roomSize : newRoommate.income;
+    if (newRoommate.name.trim() && hasRequiredField) {
+      const income = useRoomSizeSplit ? 0 : parseFloat(newRoommate.income);
+      const roomSize = useRoomSizeSplit ? parseFloat(newRoommate.roomSize) : (newRoommate.roomSize ? parseFloat(newRoommate.roomSize) : undefined);
+      
+      if (useRoomSizeSplit ? (roomSize && roomSize > 0) : income > 0) {
         const roommate: Roommate = {
           id: Math.random().toString(36).substring(2, 15),
           name: newRoommate.name.trim(),
           income,
-          roomSize: newRoommate.roomSize ? parseFloat(newRoommate.roomSize) : undefined,
+          roomSize,
         };
         onRoommatesChange([...roommates, roommate]);
         setNewRoommate({ name: '', income: '', roomSize: '' });
@@ -40,14 +43,17 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
 
   // Auto-add roommate when both fields are filled and user finishes typing
   const handleNewRoommateBlur = () => {
-    if (newRoommate.name.trim() && newRoommate.income) {
-      const income = parseFloat(newRoommate.income);
-      if (income > 0) {
+    const hasRequiredField = useRoomSizeSplit ? newRoommate.roomSize : newRoommate.income;
+    if (newRoommate.name.trim() && hasRequiredField) {
+      const income = useRoomSizeSplit ? 0 : parseFloat(newRoommate.income);
+      const roomSize = useRoomSizeSplit ? parseFloat(newRoommate.roomSize) : (newRoommate.roomSize ? parseFloat(newRoommate.roomSize) : undefined);
+      
+      if (useRoomSizeSplit ? (roomSize && roomSize > 0) : income > 0) {
         const roommate: Roommate = {
           id: Math.random().toString(36).substring(2, 15),
           name: newRoommate.name.trim(),
           income,
-          roomSize: newRoommate.roomSize ? parseFloat(newRoommate.roomSize) : undefined,
+          roomSize,
         };
         onRoommatesChange([...roommates, roommate]);
         setNewRoommate({ name: '', income: '', roomSize: '' });
