@@ -1,4 +1,4 @@
-import { SplitResult, CalculationData, RoomAdjustments } from '@/types';
+import { SplitResult, CalculationData, RoomAdjustments, Roommate } from '@/types';
 
 // Helper function to calculate adjustment percentage based on room features
 function calculateAdjustmentPercentage(adjustments?: RoomAdjustments): number {
@@ -41,7 +41,7 @@ export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: bool
   const customExpensesPerPerson = totalCustomExpenses / roommates.length;
   
   // Step 1: Calculate base rent shares
-  let baseRentShares: { roommate: any; baseShare: number; percentage: number }[] = [];
+  let baseRentShares: { roommate: Roommate; baseShare: number; percentage: number }[] = [];
   
   if (hasRoomSizes) {
     // Split rent based on room size
@@ -80,8 +80,7 @@ export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: bool
     return { roommate, baseShare, adjustedShare, adjustmentAmount, percentage };
   });
   
-  // Step 3: Calculate total adjustments and redistribute
-  const totalAdjustments = adjustedShares.reduce((sum, { adjustmentAmount }) => sum + adjustmentAmount, 0);
+  // Step 3: Calculate total adjusted rent and redistribute
   const totalAdjustedRent = adjustedShares.reduce((sum, { adjustedShare }) => sum + adjustedShare, 0);
   
   // If total adjusted rent doesn't equal total rent, redistribute proportionally
@@ -114,7 +113,7 @@ export function calculateRentSplit(data: CalculationData, useRoomSizeSplit: bool
     // Redistribute to ensure total rent is preserved
     const redistributionFactor = totalRent / totalAdjustedRent;
     
-    finalShares = adjustedShares.map(({ roommate, baseShare, adjustedShare, adjustmentAmount, percentage }) => {
+    finalShares = adjustedShares.map(({ roommate, baseShare, adjustedShare, percentage }) => {
       const redistributedShare = adjustedShare * redistributionFactor;
       const finalAdjustmentAmount = redistributedShare - baseShare;
       

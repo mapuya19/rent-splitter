@@ -1,5 +1,5 @@
 import { calculateRentSplit } from '../calculations';
-import { CalculationData, Roommate, RoomAdjustments } from '@/types';
+import { CalculationData, Roommate } from '@/types';
 
 describe('Room Adjustments', () => {
   const baseData: CalculationData = {

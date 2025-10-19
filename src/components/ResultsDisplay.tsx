@@ -9,15 +9,12 @@ import { useState } from 'react';
 
 interface ResultsDisplayProps {
   results: SplitResult[];
-  totalRent: number;
-  totalUtilities: number;
-  totalCustomExpenses: number;
   useRoomSizeSplit: boolean;
   selectedCurrency: string;
   onShare: () => void;
 }
 
-export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustomExpenses, useRoomSizeSplit, selectedCurrency, onShare }: ResultsDisplayProps) {
+export function ResultsDisplay({ results, useRoomSizeSplit, selectedCurrency, onShare }: ResultsDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {

@@ -192,9 +192,6 @@ export default function Home() {
             {results.length > 0 ? (
               <ResultsDisplay
                 results={results}
-                totalRent={totalRent}
-                totalUtilities={utilities}
-                totalCustomExpenses={customExpenses.reduce((sum, expense) => sum + expense.amount, 0)}
                 useRoomSizeSplit={useRoomSizeSplit}
                 selectedCurrency={selectedCurrency}
                 onShare={handleShare}
