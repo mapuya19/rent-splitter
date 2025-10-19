@@ -9,27 +9,33 @@ const shareData = new Map<string, { data: CalculationData; createdAt: string }>(
 const validateCalculationData = (data: unknown): data is CalculationData => {
   if (!data || typeof data !== 'object') return false;
   
+  const obj = data as Record<string, unknown>;
+  
   // Validate totalRent
-  if (typeof data.totalRent !== 'number' || data.totalRent < 0) return false;
+  if (typeof obj.totalRent !== 'number' || obj.totalRent < 0) return false;
   
   // Validate utilities
-  if (typeof data.utilities !== 'number' || data.utilities < 0) return false;
+  if (typeof obj.utilities !== 'number' || obj.utilities < 0) return false;
   
   // Validate customExpenses
-  if (!Array.isArray(data.customExpenses)) return false;
-  for (const expense of data.customExpenses) {
-    if (!expense.id || typeof expense.name !== 'string' || typeof expense.amount !== 'number' || expense.amount < 0) {
+  if (!Array.isArray(obj.customExpenses)) return false;
+  for (const expense of obj.customExpenses) {
+    if (typeof expense !== 'object' || !expense) return false;
+    const expenseObj = expense as Record<string, unknown>;
+    if (!expenseObj.id || typeof expenseObj.name !== 'string' || typeof expenseObj.amount !== 'number' || expenseObj.amount < 0) {
       return false;
     }
   }
   
   // Validate roommates
-  if (!Array.isArray(data.roommates) || data.roommates.length === 0) return false;
-  for (const roommate of data.roommates) {
-    if (!roommate.id || typeof roommate.name !== 'string' || typeof roommate.income !== 'number' || roommate.income < 0) {
+  if (!Array.isArray(obj.roommates) || obj.roommates.length === 0) return false;
+  for (const roommate of obj.roommates) {
+    if (typeof roommate !== 'object' || !roommate) return false;
+    const roommateObj = roommate as Record<string, unknown>;
+    if (!roommateObj.id || typeof roommateObj.name !== 'string' || typeof roommateObj.income !== 'number' || roommateObj.income < 0) {
       return false;
     }
-    if (roommate.roomSize !== undefined && (typeof roommate.roomSize !== 'number' || roommate.roomSize < 0)) {
+    if (roommateObj.roomSize !== undefined && (typeof roommateObj.roomSize !== 'number' || roommateObj.roomSize < 0)) {
       return false;
     }
   }
