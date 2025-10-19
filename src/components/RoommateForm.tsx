@@ -11,9 +11,10 @@ import { Roommate } from '@/types';
 interface RoommateFormProps {
   roommates: Roommate[];
   onRoommatesChange: (roommates: Roommate[]) => void;
+  useRoomSizeSplit: boolean;
 }
 
-export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps) {
+export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }: RoommateFormProps) {
   const [newRoommate, setNewRoommate] = useState({ name: '', income: '', roomSize: '' });
 
   const addRoommate = () => {
@@ -82,22 +83,26 @@ export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps
                 placeholder="Roommate name"
               />
             </div>
-            <div className="flex-1">
-              <NumberInput
-                label="Annual Income"
-                value={roommate.income}
-                onValueChange={(value) => updateRoommate(roommate.id, 'income', value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="flex-1">
-              <NumberInput
-                label="Room Size (sq ft)"
-                value={roommate.roomSize}
-                onValueChange={(value) => updateRoommate(roommate.id, 'roomSize', value)}
-                placeholder="Optional"
-              />
-            </div>
+            {!useRoomSizeSplit && (
+              <div className="flex-1">
+                <NumberInput
+                  label="Annual Income"
+                  value={roommate.income}
+                  onValueChange={(value) => updateRoommate(roommate.id, 'income', value)}
+                  placeholder="0"
+                />
+              </div>
+            )}
+            {useRoomSizeSplit && (
+              <div className="flex-1">
+                <NumberInput
+                  label="Room Size (sq ft)"
+                  value={roommate.roomSize}
+                  onValueChange={(value) => updateRoommate(roommate.id, 'roomSize', value)}
+                  placeholder="0"
+                />
+              </div>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -119,29 +124,33 @@ export function RoommateForm({ roommates, onRoommatesChange }: RoommateFormProps
                 placeholder="Roommate name"
               />
             </div>
-            <div className="flex-1">
-              <NumberInput
-                label="Annual Income"
-                value={newRoommate.income}
-                onValueChange={(value) => handleNewRoommateChange('income', value.toString())}
-                onBlur={handleNewRoommateBlur}
-                placeholder="0"
-              />
-            </div>
-            <div className="flex-1">
-              <NumberInput
-                label="Room Size (sq ft)"
-                value={newRoommate.roomSize}
-                onValueChange={(value) => handleNewRoommateChange('roomSize', value.toString())}
-                onBlur={handleNewRoommateBlur}
-                placeholder="Optional"
-              />
-            </div>
+            {!useRoomSizeSplit && (
+              <div className="flex-1">
+                <NumberInput
+                  label="Annual Income"
+                  value={newRoommate.income}
+                  onValueChange={(value) => handleNewRoommateChange('income', value.toString())}
+                  onBlur={handleNewRoommateBlur}
+                  placeholder="0"
+                />
+              </div>
+            )}
+            {useRoomSizeSplit && (
+              <div className="flex-1">
+                <NumberInput
+                  label="Room Size (sq ft)"
+                  value={newRoommate.roomSize}
+                  onValueChange={(value) => handleNewRoommateChange('roomSize', value.toString())}
+                  onBlur={handleNewRoommateBlur}
+                  placeholder="0"
+                />
+              </div>
+            )}
           <Button
             variant="outline"
             size="sm"
             onClick={addRoommate}
-            disabled={!newRoommate.name.trim() || !newRoommate.income}
+            disabled={!newRoommate.name.trim() || (!useRoomSizeSplit ? !newRoommate.income : !newRoommate.roomSize)}
           >
             <Plus className="h-4 w-4" />
           </Button>

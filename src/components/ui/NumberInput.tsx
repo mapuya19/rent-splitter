@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, forwardRef, useState } from 'react';
+import { InputHTMLAttributes, forwardRef, useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 
 interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
@@ -8,8 +8,13 @@ interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
 }
 
 const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ className, label, error, onValueChange, ...props }, ref) => {
-    const [inputValue, setInputValue] = useState(props.value || '');
+  ({ className, label, error, onValueChange, value, ...props }, ref) => {
+    const [inputValue, setInputValue] = useState(String(value || ''));
+
+    // Update input value when prop value changes
+    useEffect(() => {
+      setInputValue(String(value || ''));
+    }, [value]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
@@ -29,8 +34,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Allow: backspace, delete, tab, escape, enter, decimal point
-      if ([8, 9, 27, 13, 46, 110, 190].indexOf(e.keyCode) !== -1 ||
+      // Allow: backspace, delete, tab, escape, enter
+      if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
           // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
           (e.keyCode === 65 && e.ctrlKey === true) ||
           (e.keyCode === 67 && e.ctrlKey === true) ||
@@ -40,10 +45,19 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           (e.keyCode >= 35 && e.keyCode <= 40)) {
         return;
       }
-      // Ensure that it is a number and stop the keypress
-      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-        e.preventDefault();
+      
+      // Allow decimal point (period key) - but only one
+      if (e.key === '.' && !inputValue.includes('.')) {
+        return;
       }
+      
+      // Allow numbers (0-9) on both main keyboard and numpad
+      if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+        return;
+      }
+      
+      // Block everything else
+      e.preventDefault();
     };
 
     return (

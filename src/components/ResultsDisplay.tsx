@@ -12,10 +12,11 @@ interface ResultsDisplayProps {
   totalRent: number;
   totalUtilities: number;
   totalCustomExpenses: number;
+  useRoomSizeSplit: boolean;
   onShare: () => void;
 }
 
-export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustomExpenses, onShare }: ResultsDisplayProps) {
+export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustomExpenses, useRoomSizeSplit, onShare }: ResultsDisplayProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -24,7 +25,7 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
       results.map(result => 
         `${result.roommateName}:\n` +
         `  Total: ${formatCurrency(result.totalShare)}\n` +
-        `  - Rent Share: ${formatCurrency(result.rentShare)} (${Math.round(result.incomePercentage * 100)}%)\n` +
+        `  - Rent Share: ${formatCurrency(result.rentShare)} (${Math.round(result.incomePercentage * 100)}% ${useRoomSizeSplit ? 'of total space' : 'of income'})\n` +
         `  - Utilities: ${formatCurrency(result.utilitiesShare)}\n` +
         (result.customExpensesShare > 0 ? `  - Other Expenses: ${formatCurrency(result.customExpensesShare)}\n` : '')
       ).join('\n') +
@@ -71,7 +72,7 @@ export function ResultsDisplay({ results, totalRent, totalUtilities, totalCustom
                     {formatCurrency(result.totalShare)}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {Math.round(result.incomePercentage * 100)}% of income
+                    {Math.round(result.incomePercentage * 100)}% {useRoomSizeSplit ? 'of total space' : 'of income'}
                   </div>
                 </div>
               </div>

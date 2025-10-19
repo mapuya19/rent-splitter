@@ -5,7 +5,7 @@ import { RoommateForm } from '@/components/RoommateForm';
 import { RentForm } from '@/components/RentForm';
 import { CustomExpensesForm } from '@/components/CustomExpensesForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
-import { Toggle } from '@/components/ui/Toggle';
+import { TwoStateToggle } from '@/components/ui/TwoStateToggle';
 import { Roommate, SplitResult, CalculationData, CustomExpense } from '@/types';
 import { calculateRentSplit, generateShareableId } from '@/utils/calculations';
 import { Calculator, Users, DollarSign } from 'lucide-react';
@@ -119,13 +119,15 @@ export default function Home() {
             {/* Split Method Toggle */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
-              <Toggle
-                label="Split by Room Size"
-                description={useRoomSizeSplit ? "Rent split by square footage" : "Rent split by income"}
-                checked={useRoomSizeSplit}
-                onChange={(e) => setUseRoomSizeSplit(e.target.checked)}
-              />
-              <p className="text-sm text-gray-600 mt-2">
+              <div className="flex items-center justify-center mb-4">
+                <TwoStateToggle
+                  leftLabel="Income"
+                  rightLabel="Room Size"
+                  value={useRoomSizeSplit}
+                  onChange={setUseRoomSizeSplit}
+                />
+              </div>
+              <p className="text-sm text-gray-600 text-center">
                 {useRoomSizeSplit 
                   ? "Rent will be split based on room square footage. Add room sizes below to use this method."
                   : "Rent will be split based on annual income. Higher earners pay more rent."
@@ -136,6 +138,7 @@ export default function Home() {
             <RoommateForm
               roommates={roommates}
               onRoommatesChange={setRoommates}
+              useRoomSizeSplit={useRoomSizeSplit}
             />
           </div>
 
@@ -147,6 +150,7 @@ export default function Home() {
                 totalRent={totalRent}
                 totalUtilities={utilities}
                 totalCustomExpenses={customExpenses.reduce((sum, expense) => sum + expense.amount, 0)}
+                useRoomSizeSplit={useRoomSizeSplit}
                 onShare={handleShare}
               />
             ) : (
@@ -166,7 +170,7 @@ export default function Home() {
         {/* How it works */}
         <div className="mt-12 bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">How it works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <DollarSign className="h-6 w-6 text-blue-600" />
@@ -174,8 +178,8 @@ export default function Home() {
               <div className="ml-3">
                 <h3 className="font-medium text-gray-900">Rent Split</h3>
                 <p className="text-sm text-gray-600">
-                  Use the toggle to choose between income-based splitting (higher earners pay more) 
-                  or room size-based splitting (larger rooms pay more). Annual income is used for calculations.
+                  <strong>Income Mode:</strong> Rent split by annual income (higher earners pay more)<br/>
+                  <strong>Room Size Mode:</strong> Rent split by square footage (larger rooms pay more)
                 </p>
               </div>
             </div>
@@ -184,10 +188,22 @@ export default function Home() {
                 <Users className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-3">
-                <h3 className="font-medium text-gray-900">Utilities & Other Expenses</h3>
+                <h3 className="font-medium text-gray-900">Utilities & Expenses</h3>
                 <p className="text-sm text-gray-600">
-                  Utilities and additional expenses are split evenly between all roommates, 
-                  regardless of income.
+                  Utilities and additional expenses are always split evenly between all roommates, 
+                  regardless of income or room size.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Calculator className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="font-medium text-gray-900">Sharing & Collaboration</h3>
+                <p className="text-sm text-gray-600">
+                  Generate shareable links to collaborate with roommates. Copy formatted results 
+                  to clipboard for easy sharing via text or email.
                 </p>
               </div>
             </div>
