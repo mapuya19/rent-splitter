@@ -84,7 +84,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           )}
           ref={ref}
           type="text"
-          inputMode="numeric"
+          inputMode="decimal"
           value={inputValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
