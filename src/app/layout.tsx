@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Rent Splitter" }],
   creator: "Rent Splitter",
   publisher: "Rent Splitter",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://rent-splitter.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://rent-splitted.vercel.app"),
   alternates: {
     canonical: "/",
   },
