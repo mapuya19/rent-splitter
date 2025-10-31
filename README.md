@@ -69,16 +69,37 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Environment Variables
 
-Required environment variables:
+### Required
 
-- `GLM_API_KEY` - Your GLM 4.5 API key (currently hardcoded as fallback, but should be set via env var for production)
+- `MODEL_API_KEY` - Your OpenRouter API key for chatbot functionality (Meta Llama model)
+  - Get your API key from: https://openrouter.ai/keys
+  - **IMPORTANT**: Never commit your API key to version control
+  - For local development: Create a `.env.local` file (see `.env.example` for template)
+  - For Vercel deployment: Set it in your Vercel project settings under Environment Variables
 
-Optional environment variables:
+### Optional
 
 - `NEXT_PUBLIC_APP_URL` - Your app's public URL (defaults to `https://rent-splitter.vercel.app`)
 - `NEXT_PUBLIC_GOOGLE_VERIFICATION` - Google Search Console verification code (optional)
 
-**Note**: The chatbot uses GLM 4.5 AI for natural language understanding. The API key is included in the codebase as a fallback, but for production deployments, set it as an environment variable in Vercel.
+### Setup Instructions
+
+1. **Local Development**:
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env.local
+   
+   # Edit .env.local and add your API key
+   # MODEL_API_KEY=your-actual-api-key-here
+   ```
+
+2. **Vercel Deployment**:
+   - Go to your Vercel project settings
+   - Navigate to "Environment Variables"
+   - Add `MODEL_API_KEY` with your OpenRouter API key
+   - Redeploy your application
+
+**Note**: The `.env.local` file is gitignored and will not be committed. Use `.env.example` as a template for the required variables.
 
 ## License
 

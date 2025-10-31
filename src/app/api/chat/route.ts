@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const GLM_API_KEY = process.env.GLM_API_KEY || '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';
-const GLM_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL_API_KEY = process.env.MODEL_API_KEY;
+const MODEL_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+if (!MODEL_API_KEY) {
+  console.error('MODEL_API_KEY environment variable is not set');
+}
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -110,10 +114,17 @@ OTHER IMPORTANT RULES:
       { role: 'user', content: message },
     ];
 
-    const response = await fetch(GLM_API_URL, {
+    if (!MODEL_API_KEY) {
+      return NextResponse.json(
+        { error: 'API key not configured. Please set MODEL_API_KEY environment variable.' },
+        { status: 500 }
+      );
+    }
+
+    const response = await fetch(MODEL_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GLM_API_KEY}`,
+        'Authorization': `Bearer ${MODEL_API_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://rent-splitter.vercel.app',
         'X-Title': 'Rent Splitter',
@@ -128,7 +139,7 @@ OTHER IMPORTANT RULES:
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('GLM API error:', error);
+      console.error('Model API error:', error);
       
       // If it's a model ID error, try to provide helpful information
       if (response.status === 400) {

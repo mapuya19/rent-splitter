@@ -26,7 +26,7 @@ describe('Chat API Route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset environment variables
-    delete process.env.GLM_API_KEY;
+    delete process.env.MODEL_API_KEY;
     // Suppress console.error for tests
     console.error = jest.fn();
   });
