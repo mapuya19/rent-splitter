@@ -52,7 +52,7 @@ export default function TermsOfUse() {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mt-6 mb-3">No Warranties</h2>
               <p className="text-gray-700 leading-relaxed">
-                Rent Splitter is provided "as is" and "as available" without any warranties of any kind, either express or implied. 
+                Rent Splitter is provided &quot;as is&quot; and &quot;as available&quot; without any warranties of any kind, either express or implied. 
                 We do not guarantee the accuracy, completeness, or usefulness of any calculations or results. 
                 You should verify all calculations independently before making financial decisions.
               </p>
@@ -113,7 +113,7 @@ export default function TermsOfUse() {
               <h2 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Changes to Terms</h2>
               <p className="text-gray-700 leading-relaxed">
                 We reserve the right to modify these Terms at any time. We will notify users of any material changes by updating 
-                the "Last updated" date at the top of this page. Your continued use of the service after any changes constitutes 
+                the &quot;Last updated&quot; date at the top of this page. Your continued use of the service after any changes constitutes 
                 acceptance of those changes.
               </p>
             </section>

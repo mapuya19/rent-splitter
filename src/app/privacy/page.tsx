@@ -68,7 +68,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Chatbot Feature</h2>
               <p className="text-gray-700 leading-relaxed">
-                Our AI chatbot feature uses the Groq API (Llama 3.1 model). Messages you send to the chatbot are processed by Groq's service 
+                Our AI chatbot feature uses the Groq API (Llama 3.1 model). Messages you send to the chatbot are processed by Groq&apos;s service 
                 to generate responses. We do not store your chat history, but please be mindful of the information you share in chat messages.
               </p>
             </section>
@@ -105,7 +105,7 @@ export default function PrivacyPolicy() {
               <h2 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Changes to This Policy</h2>
               <p className="text-gray-700 leading-relaxed">
                 We may update this privacy policy from time to time. We will notify users of any material changes by updating 
-                the "Last updated" date at the top of this page.
+                the &quot;Last updated&quot; date at the top of this page.
               </p>
             </section>
 
