@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Rent Splitter - Fair Rent & Utilities Calculator",
+    default: "Free Rent Calculator - Split Rent by Income or Room Size | Rent Splitter",
     template: "%s | Rent Splitter",
   },
-  description: "Split rent proportionally based on income or room size, and utilities evenly between roommates. Generate shareable links to collaborate with your roommates. Free, easy-to-use rent calculator.",
+  description: "Calculate fair rent splits by income or room size. Free online rent and utilities calculator for roommates. Split expenses evenly, generate shareable links, and support multiple currencies. No signup required.",
   keywords: [
     "rent splitter",
     "rent calculator",
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "Rent Splitter",
-    title: "Rent Splitter - Fair Rent & Utilities Calculator",
-    description: "Split rent proportionally based on income or room size, and utilities evenly between roommates. Generate shareable links to collaborate with your roommates.",
+    title: "Free Rent Calculator - Split Rent by Income or Room Size | Rent Splitter",
+    description: "Calculate fair rent splits by income or room size. Free online rent and utilities calculator for roommates. Split expenses evenly, generate shareable links, and support multiple currencies.",
     images: [
       {
         url: "/og-image.png",
@@ -57,8 +57,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rent Splitter - Fair Rent & Utilities Calculator",
-    description: "Split rent proportionally based on income or room size, and utilities evenly between roommates.",
+    title: "Free Rent Calculator - Split Rent by Income or Room Size | Rent Splitter",
+    description: "Calculate fair rent splits by income or room size. Free online rent and utilities calculator for roommates. Split expenses evenly, generate shareable links, and support multiple currencies.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -94,7 +94,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "Rent Splitter",
-    description: "Split rent proportionally based on income or room size, and utilities evenly between roommates. Generate shareable links to collaborate with your roommates.",
+    description: "Calculate fair rent splits by income or room size. Free online rent and utilities calculator for roommates. Split expenses evenly, generate shareable links, and support multiple currencies. No signup required.",
     url: baseUrl,
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web",

@@ -238,7 +238,7 @@ export default function Home() {
               
               {/* Split Method Toggle */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Rent Split Method</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Split Method</h3>
                 <div className="flex items-center justify-center mb-4">
                   <TwoStateToggle
                     leftLabel="Room Size"
