@@ -113,12 +113,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-8">
+    <main className="min-h-screen bg-gray-50 pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <header className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Calculator className="h-8 w-8 text-blue-600 mr-2" />
+            <Calculator className="h-8 w-8 text-blue-600 mr-2" aria-hidden="true" />
             <h1 className="text-3xl font-bold text-gray-900">Rent Splitter</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
@@ -128,7 +128,7 @@ export default function Home() {
           <div className="mt-4 text-sm text-gray-500">
             💡 <strong>Annual Income:</strong> Enter your yearly salary before taxes. The app will calculate monthly amounts automatically.
           </div>
-        </div>
+        </header>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -288,6 +288,6 @@ export default function Home() {
         </div>
       </div>
       <Footer />
-    </div>
+    </main>
   );
 }
