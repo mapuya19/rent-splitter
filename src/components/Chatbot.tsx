@@ -238,7 +238,7 @@ export function Chatbot({
             setIsOpen(true);
             localStorage.setItem('chatbot-closed', 'false');
           }}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           aria-label="Open chatbot"
         >
           <MessageCircle className="h-6 w-6 mx-auto" />
@@ -248,7 +248,7 @@ export function Chatbot({
       {/* Chat Modal */}
       {isOpen && (
         <div
-          className="fixed bottom-6 right-6 z-50 w-full max-w-md h-[600px] max-h-[85vh] flex flex-col bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl border border-gray-200/50 transition-all duration-200"
+          className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 w-auto sm:w-full sm:max-w-md h-[600px] max-h-[85vh] flex flex-col bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl border border-gray-200/50 transition-all duration-200"
           style={{
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05)',
           }}
