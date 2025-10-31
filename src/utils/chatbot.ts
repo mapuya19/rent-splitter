@@ -275,18 +275,34 @@ export async function processChatbotMessage(
       // Only show confirmation if we found data
       if (foundItems.length > 0) {
         autofill = () => {
+          // Fill in order: rent first, then utilities, then roommates
           if (parsedData.totalRent) callbacks.onSetTotalRent(parsedData.totalRent);
           if (parsedData.utilities) callbacks.onSetUtilities(parsedData.utilities);
+          
+          // Validate and add roommates - ensure names are present
           if (parsedData.roommates) {
             parsedData.roommates.forEach(rm => {
-              callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
+              // CRITICAL: Ensure name is present before adding/updating
+              if (rm.name && rm.name.trim()) {
+                callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
+              } else {
+                console.warn('Skipping roommate: name is missing or empty');
+              }
             });
           }
+          
+          // Validate and add expenses - ensure names are present
           if (parsedData.customExpenses) {
             parsedData.customExpenses.forEach(exp => {
-              callbacks.onAddCustomExpense(exp.name, exp.amount);
+              // CRITICAL: Ensure name and valid amount are present
+              if (exp.name && exp.name.trim() && exp.amount > 0) {
+                callbacks.onAddCustomExpense(exp.name, exp.amount);
+              } else {
+                console.warn(`Skipping expense: name or amount is invalid (name: ${exp.name}, amount: ${exp.amount})`);
+              }
             });
           }
+          
           if (parsedData.currency) callbacks.onSetCurrency(parsedData.currency);
           if (parsedData.useRoomSizeSplit !== undefined) {
             callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
@@ -439,18 +455,34 @@ function processChatbotMessageRules(
           `Would you like me to fill this in? (Say "yes" or "fill it in" to confirm)`,
         parsedData,
         autofill: () => {
+          // Fill in order: rent first, then utilities, then roommates
           if (parsedData.totalRent) callbacks.onSetTotalRent(parsedData.totalRent);
           if (parsedData.utilities) callbacks.onSetUtilities(parsedData.utilities);
+          
+          // Validate and add roommates - ensure names are present
           if (parsedData.roommates) {
             parsedData.roommates.forEach(rm => {
-              callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
+              // CRITICAL: Ensure name is present before adding/updating
+              if (rm.name && rm.name.trim()) {
+                callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
+              } else {
+                console.warn('Skipping roommate: name is missing or empty');
+              }
             });
           }
+          
+          // Validate and add expenses - ensure names are present
           if (parsedData.customExpenses) {
             parsedData.customExpenses.forEach(exp => {
-              callbacks.onAddCustomExpense(exp.name, exp.amount);
+              // CRITICAL: Ensure name and valid amount are present
+              if (exp.name && exp.name.trim() && exp.amount > 0) {
+                callbacks.onAddCustomExpense(exp.name, exp.amount);
+              } else {
+                console.warn(`Skipping expense: name or amount is invalid (name: ${exp.name}, amount: ${exp.amount})`);
+              }
             });
           }
+          
           if (parsedData.currency) callbacks.onSetCurrency(parsedData.currency);
           if (parsedData.useRoomSizeSplit !== undefined) {
             callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);

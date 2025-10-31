@@ -115,6 +115,12 @@ export default function Home() {
 
   // Chatbot handlers - smart handlers that update existing or add new
   const handleAddRoommate = (name: string, income: number, roomSize?: number) => {
+    // CRITICAL: Name must be provided and not empty
+    if (!name || !name.trim()) {
+      console.warn('Cannot add/update roommate: name is required');
+      return;
+    }
+    
     // Normalize name for comparison (trim, lowercase)
     const normalizedName = name.trim().toLowerCase();
     
@@ -124,27 +130,44 @@ export default function Home() {
     );
     
     if (existingIndex >= 0) {
-      // Update existing roommate
+      // Update existing roommate - only update if name is properly associated
       const updatedRoommates = [...roommates];
       updatedRoommates[existingIndex] = {
         ...updatedRoommates[existingIndex],
-        income: income || updatedRoommates[existingIndex].income,
-        roomSize: roomSize !== undefined ? roomSize : updatedRoommates[existingIndex].roomSize,
+        income: income > 0 ? income : updatedRoommates[existingIndex].income,
+        roomSize: roomSize !== undefined && roomSize > 0 ? roomSize : updatedRoommates[existingIndex].roomSize,
       };
       setRoommates(updatedRoommates);
     } else {
-      // Add new roommate
+      // Add new roommate - ensure we have valid data
+      if ((income <= 0 && !useRoomSizeSplit) || (roomSize === undefined && useRoomSizeSplit)) {
+        console.warn(`Cannot add roommate ${name}: missing required field (${useRoomSizeSplit ? 'roomSize' : 'income'})`);
+        return;
+      }
+      
       const roommate: Roommate = {
         id: Math.random().toString(36).substring(2, 15),
         name: name.trim(),
-        income: income || 0,
-        roomSize,
+        income: income > 0 ? income : 0,
+        roomSize: roomSize && roomSize > 0 ? roomSize : undefined,
       };
       setRoommates([...roommates, roommate]);
     }
   };
 
   const handleAddCustomExpense = (name: string, amount: number) => {
+    // CRITICAL: Name must be provided and not empty
+    if (!name || !name.trim()) {
+      console.warn('Cannot add/update expense: name is required');
+      return;
+    }
+    
+    // CRITICAL: Amount must be positive
+    if (!amount || amount <= 0) {
+      console.warn(`Cannot add/update expense ${name}: amount must be greater than 0`);
+      return;
+    }
+    
     // Normalize name for comparison (trim, lowercase)
     const normalizedName = name.trim().toLowerCase();
     
@@ -154,7 +177,7 @@ export default function Home() {
     );
     
     if (existingIndex >= 0) {
-      // Update existing expense
+      // Update existing expense - name must be properly associated
       const updatedExpenses = [...customExpenses];
       updatedExpenses[existingIndex] = {
         ...updatedExpenses[existingIndex],

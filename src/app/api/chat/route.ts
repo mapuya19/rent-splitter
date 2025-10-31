@@ -37,6 +37,21 @@ CRITICAL RULES FOR PREVENTING DUPLICATES:
 3. **Only add NEW roommates**: Only include roommates in the response if they don't already exist in the current form state.
 4. **Same for expenses**: Check if custom expenses with the same name exist before adding new ones.
 
+CRITICAL RULES FOR NAME ASSOCIATION:
+1. **NEVER extract income/roomSize without a name**: Income and room size MUST always be associated with a specific roommate name. If you see "$60k" without a name context, ask the user which roommate this refers to.
+2. **NEVER extract expense amounts without a name**: Expense amounts MUST always be associated with an expense name. If you see "$75" without context, ask what expense this is for.
+3. **When updating**: Always include the name in your response data. For example: {"roommates": [{"name": "Alice", "income": 60000}]} - NEVER omit the name field.
+
+FIELD FILLING ORDER (IMPORTANT):
+Always encourage users to fill the form from top to bottom in this order:
+1. **Total Monthly Rent** (required first - rent must be set before adding roommates)
+2. **Monthly Utilities** (recommended second)
+3. **Roommates** (can only be added after rent is set)
+4. **Custom Expenses** (optional, can be added anytime)
+5. **Split Method** (can be set anytime)
+
+IMPORTANT: If rent is not set (totalRent is 0 or missing), remind users to set rent first before adding roommates. Calculations cannot work without rent!
+
 INCOME PARSING RULES (VERY IMPORTANT):
 - Income is ALWAYS annual (yearly) salary, NOT monthly
 - "$60k" or "$60 thousand" = 60000 (multiply by 1000)
@@ -72,14 +87,21 @@ OTHER IMPORTANT RULES:
       ).join(', ') || 'none';
       const existingExpenses = customExpenses?.map((e: { name: string; amount: number }) => `${e.name}: $${e.amount.toLocaleString()}`).join(', ') || 'none';
       
+      const rentStatus = totalRent > 0 ? 'SET' : 'NOT SET (REQUIRED)';
+      const rentWarning = totalRent <= 0 ? '\n⚠️ WARNING: Rent is not set! Users should set rent BEFORE adding roommates.' : '';
+      
       stateContext = `\n\nCURRENT FORM STATE (check this before adding anything to avoid duplicates):\n` +
-        `- Total Rent: $${totalRent || 0}\n` +
+        `- Total Rent: $${totalRent || 0} [${rentStatus}]${rentWarning}\n` +
         `- Utilities: $${utilities || 0}\n` +
         `- Roommates: ${existingRoommates}\n` +
         `- Custom Expenses: ${existingExpenses}\n` +
         `- Currency: ${currency || 'USD'}\n` +
         `- Split Method: ${useRoomSizeSplit ? 'Room Size' : 'Income'}\n` +
-        `\nIMPORTANT: Before adding any roommate, check if they already exist in the list above. If they exist, UPDATE their information instead of adding a duplicate.`;
+        `\nIMPORTANT RULES:\n` +
+        `1. Before adding any roommate, check if they already exist in the list above. If they exist, UPDATE their information instead of adding a duplicate.\n` +
+        `2. ALWAYS associate income/roomSize with a name. Never extract income without knowing which roommate it belongs to.\n` +
+        `3. ALWAYS associate expense amounts with expense names. Never extract amounts without knowing what expense it is.\n` +
+        `4. If rent is 0, remind the user to set rent FIRST before adding roommates.`;
     }
 
     const messages: ChatMessage[] = [
