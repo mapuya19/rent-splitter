@@ -67,6 +67,14 @@ interface ChatbotProps {
   onAddCustomExpense: (name: string, amount: number) => void;
   onSetCurrency: (currency: string) => void;
   onSetSplitMethod: (useRoomSizeSplit: boolean) => void;
+  currentState?: {
+    totalRent?: number;
+    utilities?: number;
+    roommates?: Array<{ name: string; income?: number; roomSize?: number }>;
+    customExpenses?: Array<{ name: string; amount: number }>;
+    currency?: string;
+    useRoomSizeSplit?: boolean;
+  };
 }
 
 export function Chatbot({
@@ -76,6 +84,7 @@ export function Chatbot({
   onAddCustomExpense,
   onSetCurrency,
   onSetSplitMethod,
+  currentState,
 }: ChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -164,7 +173,8 @@ export function Chatbot({
           onAddCustomExpense,
           onSetCurrency,
           onSetSplitMethod,
-        }
+        },
+        currentState
       );
 
       const botMessage: Message = {

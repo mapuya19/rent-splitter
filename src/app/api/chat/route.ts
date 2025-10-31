@@ -10,19 +10,20 @@ interface ChatMessage {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationHistory } = await request.json();
+    const { message, conversationHistory, currentState } = await request.json();
 
     const systemPrompt = `You are a helpful assistant for a rent splitting calculator app. Your job is to:
 1. Help users understand how to use the app
 2. Extract information from their messages to fill out the form
 3. Provide friendly, clear responses
+4. AVOID creating duplicate roommates or expenses - UPDATE existing ones instead
 
 CRITICAL: When users provide information, you MUST respond with ONLY valid JSON (no markdown, no code blocks, no extra text). Format your response as a JSON object with this EXACT structure:
 {
   "response": "Your natural language response. If you found data to extract, mention what you found and ask if they want you to fill it in.",
   "data": {
-    "totalRent": number (if mentioned, e.g. 2000),
-    "utilities": number (if mentioned, e.g. 300),
+    "totalRent": number (if mentioned or updated, e.g. 2000),
+    "utilities": number (if mentioned or updated, e.g. 300),
     "roommates": [{"name": "string", "income": number (optional), "roomSize": number (optional)}],
     "customExpenses": [{"name": "string", "amount": number}],
     "currency": "USD" | "EUR" | "GBP" | "CAD" | "AUD" (if mentioned),
@@ -30,18 +31,59 @@ CRITICAL: When users provide information, you MUST respond with ONLY valid JSON 
   }
 }
 
-IMPORTANT RULES: 
+CRITICAL RULES FOR PREVENTING DUPLICATES:
+1. **ALWAYS check existing data first**: The user's current form state will be provided in the conversation context. Before adding a roommate, check if a roommate with the same name (case-insensitive) already exists.
+2. **UPDATE instead of ADD**: If a roommate with the same name exists, you MUST update that roommate's information (income or roomSize) rather than creating a duplicate.
+3. **Only add NEW roommates**: Only include roommates in the response if they don't already exist in the current form state.
+4. **Same for expenses**: Check if custom expenses with the same name exist before adding new ones.
+
+INCOME PARSING RULES (VERY IMPORTANT):
+- Income is ALWAYS annual (yearly) salary, NOT monthly
+- "$60k" or "$60 thousand" = 60000 (multiply by 1000)
+- "$60,000" = 60000 (already annual)
+- "$5000 per month" = 60000 (multiply by 12: 5000 * 12 = 60000)
+- "$5000/month" = 60000
+- Validate income ranges: typically 20,000 to 500,000 for annual income
+- If user says "monthly income", convert to annual by multiplying by 12
+- If user says "weekly income", convert to annual by multiplying by 52
+- If ambiguous, default to annual and clarify in response
+
+ROOMMATE MATCHING:
+- Match roommates by name (case-insensitive, ignore extra spaces)
+- "John" matches "john", "John Smith" matches "john smith"
+- When updating: include the FULL roommate object with ALL fields (name, income if income-based, roomSize if room-size-based)
+
+OTHER IMPORTANT RULES: 
 - Return ONLY the JSON object, nothing else
 - Do NOT wrap JSON in markdown code blocks
 - Do NOT add any text before or after the JSON
 - If no data is extracted, include "data": {} with empty object
-- For roommates, income should be annual salary (e.g., 60000 for $60k)
 - Room size should be in square feet
 - Be conversational and helpful in your "response" field text
-- If extracting data, clearly list what you found and ask for confirmation`;
+- If extracting data, clearly list what you found (mention if updating vs adding) and ask for confirmation
+- Always confirm income format if uncertain (e.g., "I'm setting Alice's annual income to $60,000. Is that correct?")`;
+
+    // Add current form state to context if provided
+    let stateContext = '';
+    if (currentState) {
+      const { totalRent, utilities, roommates, customExpenses, currency, useRoomSizeSplit } = currentState;
+      const existingRoommates = roommates?.map((r: { name: string; income?: number; roomSize?: number }) => 
+        `${r.name}${r.income ? ` (income: $${r.income.toLocaleString()})` : ''}${r.roomSize ? ` (room size: ${r.roomSize} sq ft)` : ''}`
+      ).join(', ') || 'none';
+      const existingExpenses = customExpenses?.map((e: { name: string; amount: number }) => `${e.name}: $${e.amount.toLocaleString()}`).join(', ') || 'none';
+      
+      stateContext = `\n\nCURRENT FORM STATE (check this before adding anything to avoid duplicates):\n` +
+        `- Total Rent: $${totalRent || 0}\n` +
+        `- Utilities: $${utilities || 0}\n` +
+        `- Roommates: ${existingRoommates}\n` +
+        `- Custom Expenses: ${existingExpenses}\n` +
+        `- Currency: ${currency || 'USD'}\n` +
+        `- Split Method: ${useRoomSizeSplit ? 'Room Size' : 'Income'}\n` +
+        `\nIMPORTANT: Before adding any roommate, check if they already exist in the list above. If they exist, UPDATE their information instead of adding a duplicate.`;
+    }
 
     const messages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: systemPrompt + stateContext },
       ...(conversationHistory || []),
       { role: 'user', content: message },
     ];
@@ -91,7 +133,18 @@ IMPORTANT RULES:
     const assistantMessage = data.choices?.[0]?.message?.content || '';
 
     // Extract JSON from the response - handle cases where JSON is in code blocks or mixed with text
-    let parsedResponse: { response?: string; content?: string; data?: any } = {};
+    let parsedResponse: { 
+      response?: string; 
+      content?: string; 
+      data?: {
+        totalRent?: number;
+        utilities?: number;
+        roommates?: Array<{ name: string; income?: number; roomSize?: number }>;
+        customExpenses?: Array<{ name: string; amount: number }>;
+        currency?: string;
+        useRoomSizeSplit?: boolean;
+      };
+    } = {};
     let cleanMessage = assistantMessage.trim();
     
     // First, try to extract JSON from markdown code blocks (even if there's text before/after)

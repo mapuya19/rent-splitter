@@ -62,22 +62,50 @@ function extractUtilities(text: string): number | null {
 function extractRoommates(text: string): Array<{ name: string; income?: number; roomSize?: number }> {
   const roommates: Array<{ name: string; income?: number; roomSize?: number }> = [];
 
-  // Pattern: "Alice makes $60k", "Bob earns 80000", "Charlie 70k"
-  const incomePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|:)\s*\$?\s*(\d+(?:,\d{3})*)\s*(?:k|thousand)?/gi;
-  let match;
-  while ((match = incomePattern.exec(text)) !== null) {
-    const name = match[1].trim();
-    let income = parseFloat(match[2].replace(/,/g, ''));
-    if (text.toLowerCase().includes('k') || text.toLowerCase().includes('thousand')) {
-      income *= 1000;
-    }
-    if (income > 0 && income < 1000000) {
-      roommates.push({ name, income });
+  // Pattern: "Alice makes $60k", "Bob earns 80000", "Charlie 70k", "Dave makes $5k per month"
+  const incomePatterns = [
+    // Annual: "$60k", "$60 thousand", "$60,000 per year", "60k annually"
+    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|has|:|makes?)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:k|thousand)?\s*(?:per\s*(?:year|annually|yr))?/gi,
+    // Monthly: "$5000 per month", "$5k/month", "5000 monthly"
+    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|has|:|makes?)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:k|thousand)?\s*(?:per\s*month|monthly|\/month)/gi,
+    // Weekly: "$1000 per week", "$1k/week"
+    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|has|:|makes?)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:k|thousand)?\s*(?:per\s*week|weekly|\/week)/gi,
+  ];
+  
+  for (const pattern of incomePatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const name = match[1].trim();
+      let income = parseFloat(match[2].replace(/,/g, ''));
+      
+      // Check if it's k/thousand notation
+      const matchText = match[0].toLowerCase();
+      if (matchText.includes('k') || matchText.includes('thousand')) {
+        income *= 1000;
+      }
+      
+      // Convert to annual if monthly or weekly
+      if (matchText.includes('month') || matchText.includes('/month')) {
+        income *= 12; // Convert monthly to annual
+      } else if (matchText.includes('week') || matchText.includes('/week')) {
+        income *= 52; // Convert weekly to annual
+      }
+      
+      // Validate income range (annual: 20k to 500k typically)
+      if (income >= 20000 && income <= 500000) {
+        const existing = roommates.find(r => r.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          existing.income = income;
+        } else {
+          roommates.push({ name, income });
+        }
+      }
     }
   }
 
   // Pattern: "Alice room is 150 sq ft", "Bob's room 200 square feet"
   const roomSizePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)(?:'s)?\s+room\s+(?:is|:)?\s*(\d+)\s*(?:sq\s*ft|square\s*feet|sqft)/gi;
+  let match;
   while ((match = roomSizePattern.exec(text)) !== null) {
     const name = match[1].trim();
     const roomSize = parseInt(match[2]);
@@ -181,6 +209,14 @@ export async function processChatbotMessage(
     onAddCustomExpense: (name: string, amount: number) => void;
     onSetCurrency: (currency: string) => void;
     onSetSplitMethod: (useRoomSizeSplit: boolean) => void;
+  },
+  currentState?: {
+    totalRent?: number;
+    utilities?: number;
+    roommates?: Array<{ name: string; income?: number; roomSize?: number }>;
+    customExpenses?: Array<{ name: string; amount: number }>;
+    currency?: string;
+    useRoomSizeSplit?: boolean;
   }
 ): Promise<BotResponse> {
   try {
@@ -198,6 +234,7 @@ export async function processChatbotMessage(
       body: JSON.stringify({
         message,
         conversationHistory: apiHistory,
+        currentState: currentState || undefined,
       }),
     });
 

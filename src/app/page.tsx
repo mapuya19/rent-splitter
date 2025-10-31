@@ -113,24 +113,63 @@ export default function Home() {
     loadSharedData();
   }, []);
 
-  // Chatbot handlers
+  // Chatbot handlers - smart handlers that update existing or add new
   const handleAddRoommate = (name: string, income: number, roomSize?: number) => {
-    const roommate: Roommate = {
-      id: Math.random().toString(36).substring(2, 15),
-      name,
-      income,
-      roomSize,
-    };
-    setRoommates([...roommates, roommate]);
+    // Normalize name for comparison (trim, lowercase)
+    const normalizedName = name.trim().toLowerCase();
+    
+    // Check if roommate with same name already exists
+    const existingIndex = roommates.findIndex(
+      r => r.name.trim().toLowerCase() === normalizedName
+    );
+    
+    if (existingIndex >= 0) {
+      // Update existing roommate
+      const updatedRoommates = [...roommates];
+      updatedRoommates[existingIndex] = {
+        ...updatedRoommates[existingIndex],
+        income: income || updatedRoommates[existingIndex].income,
+        roomSize: roomSize !== undefined ? roomSize : updatedRoommates[existingIndex].roomSize,
+      };
+      setRoommates(updatedRoommates);
+    } else {
+      // Add new roommate
+      const roommate: Roommate = {
+        id: Math.random().toString(36).substring(2, 15),
+        name: name.trim(),
+        income: income || 0,
+        roomSize,
+      };
+      setRoommates([...roommates, roommate]);
+    }
   };
 
   const handleAddCustomExpense = (name: string, amount: number) => {
-    const expense: CustomExpense = {
-      id: Math.random().toString(36).substring(2, 15),
-      name,
-      amount,
-    };
-    setCustomExpenses([...customExpenses, expense]);
+    // Normalize name for comparison (trim, lowercase)
+    const normalizedName = name.trim().toLowerCase();
+    
+    // Check if expense with same name already exists
+    const existingIndex = customExpenses.findIndex(
+      e => e.name.trim().toLowerCase() === normalizedName
+    );
+    
+    if (existingIndex >= 0) {
+      // Update existing expense
+      const updatedExpenses = [...customExpenses];
+      updatedExpenses[existingIndex] = {
+        ...updatedExpenses[existingIndex],
+        amount,
+      };
+      setCustomExpenses(updatedExpenses);
+    } else {
+      // Add new expense
+      const expense: CustomExpense = {
+        id: Math.random().toString(36).substring(2, 15),
+        name: name.trim(),
+        amount,
+      };
+      setCustomExpenses([...customExpenses, expense]);
+    }
   };
 
   return (
@@ -316,6 +355,21 @@ export default function Home() {
         onAddCustomExpense={handleAddCustomExpense}
         onSetCurrency={setSelectedCurrency}
         onSetSplitMethod={setUseRoomSizeSplit}
+        currentState={{
+          totalRent,
+          utilities,
+          roommates: roommates.map(r => ({
+            name: r.name,
+            income: r.income,
+            roomSize: r.roomSize,
+          })),
+          customExpenses: customExpenses.map(e => ({
+            name: e.name,
+            amount: e.amount,
+          })),
+          currency: selectedCurrency,
+          useRoomSizeSplit,
+        }}
       />
     </main>
   );
