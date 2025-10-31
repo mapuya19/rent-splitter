@@ -10,7 +10,8 @@ A free, easy-to-use rent and utilities calculator for roommates. Split rent prop
 - ⚡ **Even utilities splitting** - Utilities and expenses are always split evenly
 - 💵 **Multi-currency support** - Support for USD, EUR, GBP, CAD, AUD, and more
 - 🔗 **Shareable links** - Generate compressed URLs to share calculations with roommates
-- 📱 **Responsive design** - Works perfectly on desktop, tablet, and mobile
+- 📱 **Responsive design** - Fully optimized for desktop, tablet, and mobile devices
+- 🤖 **AI Chatbot Assistant** - Get help filling out forms or learn about features using an intelligent chatbot powered by Meta Llama
 
 ## Getting Started
 
@@ -26,9 +27,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 - [Next.js 15](https://nextjs.org) - React framework with App Router
 - [TypeScript](https://www.typescriptlang.org) - Type safety
-- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [Tailwind CSS](https://tailwindcss.com) - Styling and responsive design
 - [Jest](https://jestjs.io) - Testing framework
 - [React Testing Library](https://testing-library.com/react) - Component testing
+- [Meta Llama 3.3 8B](https://openrouter.ai) - AI chatbot powered by OpenRouter API
 
 ## SEO Optimization
 
@@ -39,7 +41,8 @@ This project is optimized for search engines with:
 - ✅ Sitemap.xml generation
 - ✅ Robots.txt configuration
 - ✅ Semantic HTML structure
-- ✅ Mobile-responsive design
+- ✅ Fully mobile-responsive design with optimized chatbot interface
+- ✅ Smooth animations and transitions for better UX
 - ✅ Fast page load times
 
 See `DEPLOYMENT.md` for deployment instructions.
@@ -66,6 +69,18 @@ See `src/__tests__/README.md` for detailed testing documentation.
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Chatbot Feature
+
+The application includes an AI-powered chatbot assistant that helps users:
+
+- **Fill out forms automatically** - Tell the chatbot your rent, utilities, and roommate info in natural language
+- **Answer questions** - Learn about features, split methods, and how the app works
+- **Smart extraction** - The AI extracts structured data from conversational input (rent amounts, incomes, room sizes, etc.)
+- **Mobile-optimized** - Fully responsive chatbot interface that adapts to mobile screen sizes
+- **Smooth animations** - Polished UI with fade-in, slide, and scale animations for better user experience
+
+The chatbot uses Meta Llama 3.3 8B model via OpenRouter API with a rules-based fallback for reliability.
 
 ## Environment Variables
 
