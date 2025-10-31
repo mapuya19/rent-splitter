@@ -88,7 +88,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://rent-splitter.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://rent-splitted.vercel.app";
   
   const jsonLd = {
     "@context": "https://schema.org",

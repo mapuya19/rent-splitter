@@ -94,7 +94,7 @@ The chatbot uses Llama 3.1 8B Instant model via Groq API with a rules-based fall
 
 ### Optional
 
-- `NEXT_PUBLIC_APP_URL` - Your app's public URL (defaults to `https://rent-splitter.vercel.app`)
+- `NEXT_PUBLIC_APP_URL` - Your app's public URL (defaults to `https://rent-splitted.vercel.app`)
 - `NEXT_PUBLIC_GOOGLE_VERIFICATION` - Google Search Console verification code (optional)
 
 ### Setup Instructions
