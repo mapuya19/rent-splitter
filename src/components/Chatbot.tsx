@@ -254,9 +254,13 @@ export function Chatbot({
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-14 w-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 animate-bounce"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-14 w-14 min-w-[56px] min-h-[56px] rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 animate-bounce touch-manipulation select-none"
           aria-label="Open chatbot"
-          style={{ animationDuration: '2s', animationIterationCount: 'infinite' }}
+          style={{ 
+            animationDuration: '2s', 
+            animationIterationCount: 'infinite',
+            touchAction: 'manipulation'
+          }}
         >
           <MessageCircle className="h-6 w-6 mx-auto" />
         </button>
@@ -265,9 +269,9 @@ export function Chatbot({
       {/* Chat Modal */}
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - Hidden on mobile to prevent scrolling issues */}
           <div
-            className={`fixed inset-0 bg-black/20 z-40 transition-opacity duration-300 ${
+            className={`hidden sm:block fixed inset-0 bg-black/20 z-40 transition-opacity duration-300 ${
               isClosing ? 'opacity-0' : 'opacity-100'
             }`}
             onClick={handleClose}
@@ -296,8 +300,9 @@ export function Chatbot({
             </div>
             <button
               onClick={handleClose}
-              className="p-1 hover:bg-blue-700 rounded transition-all duration-200 hover:scale-110 active:scale-95"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 rounded transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation select-none"
               aria-label="Close chatbot"
+              style={{ touchAction: 'manipulation' }}
             >
               <X className="h-5 w-5" />
             </button>
@@ -310,7 +315,8 @@ export function Chatbot({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('help-form')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px]"
+                style={{ touchAction: 'manipulation' }}
               >
                 Help Fill Form
               </Button>
@@ -318,7 +324,8 @@ export function Chatbot({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('explain-features')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px]"
+                style={{ touchAction: 'manipulation' }}
               >
                 Explain Features
               </Button>
@@ -326,7 +333,8 @@ export function Chatbot({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('income-vs-room')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px]"
+                style={{ touchAction: 'manipulation' }}
               >
                 Income vs Room Size
               </Button>
@@ -334,7 +342,13 @@ export function Chatbot({
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div 
+            className="flex-1 overflow-y-auto p-4 space-y-4 touch-pan-y overscroll-contain select-text" 
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y pinch-zoom',
+            }}
+          >
             {messages.map((message, index) => (
               <div
                 key={message.id}
@@ -405,12 +419,13 @@ export function Chatbot({
               <Button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || sendingMessage}
-                className={`bg-blue-600 hover:bg-blue-700 flex-shrink-0 transition-all duration-200 ${
+                className={`bg-blue-600 hover:bg-blue-700 active:bg-blue-800 flex-shrink-0 transition-all duration-200 min-w-[44px] min-h-[44px] touch-manipulation ${
                   sendingMessage 
                     ? 'animate-pulse scale-95' 
                     : 'hover:scale-110 active:scale-95'
                 }`}
                 aria-label="Send message"
+                style={{ touchAction: 'manipulation' }}
               >
                 <Send className={`h-4 w-4 transition-transform duration-200 ${
                   sendingMessage ? 'rotate-12' : ''
