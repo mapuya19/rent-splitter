@@ -93,7 +93,7 @@ describe('Chat API Route', () => {
             'Authorization': expect.stringContaining('Bearer'),
             'Content-Type': 'application/json',
           }),
-          body: expect.stringContaining('meta-llama/llama-3.3-8b-instruct:free'),
+          body: expect.stringContaining('llama-3.1-8b-instant'),
         })
       );
     });

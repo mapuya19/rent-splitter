@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const MODEL_API_KEY = process.env.MODEL_API_KEY;
-const MODEL_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 if (!MODEL_API_KEY) {
   console.error('MODEL_API_KEY environment variable is not set');
@@ -126,11 +126,9 @@ OTHER IMPORTANT RULES:
       headers: {
         'Authorization': `Bearer ${MODEL_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://rent-splitter.vercel.app',
-        'X-Title': 'Rent Splitter',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-8b-instruct:free',
+        model: 'llama-3.1-8b-instant',
         messages,
         temperature: 0.7,
         max_tokens: 1000,
@@ -146,10 +144,8 @@ OTHER IMPORTANT RULES:
         try {
           const errorData = JSON.parse(error);
           if (errorData.error?.message?.includes('not a valid model')) {
-            console.error('Model ID error. Current model:', 'meta-llama/llama-3.3-8b-instruct:free');
-            console.error('Alternative models on OpenRouter:');
-            console.error('- meta-llama/llama-3.3-8b-instruct:free');
-            console.error('- z-ai/glm-4.5-air:free');
+            console.error('Model ID error. Current model: llama-3.1-8b-instant');
+            console.error('Available Groq models: llama-3.1-8b-instant, llama-3.1-70b-versatile, mixtral-8x7b-32768, openai/gpt-oss-20b');
           }
         } catch {
           // Ignore parse errors

@@ -60,7 +60,7 @@ app/api/chat/__tests__/
 - **Error handling**: Tests graceful fallback to rules-based responses
 - **Conversation history**: Tests proper handling of conversation context
 - **Data extraction**: Tests extraction of rent, utilities, roommates, expenses from natural language
-- **API integration**: Tests communication with OpenRouter API
+- **API integration**: Tests communication with Groq API
 - **Edge cases**: Tests with missing data, network errors, API failures
 
 ### 3. Integration Tests (`integration/sharing.test.ts`)
@@ -79,7 +79,7 @@ app/api/chat/__tests__/
 
 ### 5. API Route Tests (`app/api/chat/__tests__/route.test.ts`)
 - **Chat API endpoint**: Tests the `/api/chat` POST endpoint
-- **LLM integration**: Tests communication with OpenRouter API (Meta Llama model)
+- **LLM integration**: Tests communication with Groq API (Llama 3.1 model)
 - **Data extraction**: Tests parsing of structured data from LLM responses
 - **JSON parsing**: Tests extraction of JSON from LLM responses (including code blocks)
 - **Error handling**: Tests API errors, network failures, and missing API keys
@@ -122,7 +122,7 @@ Tests use realistic data that mirrors real-world usage:
 - **Browser APIs**: Clipboard, location, and alert are mocked in component tests
 - **Next.js router**: Navigation functions are mocked where needed
 - **Fetch API**: Global fetch is mocked for chatbot API tests
-- **External APIs**: OpenRouter API calls are mocked with realistic responses
+- **External APIs**: Groq API calls are mocked with realistic responses
 - **Next.js server components**: NextRequest and NextResponse are mocked for API route tests
 - **URL-based sharing**: The application uses URL-based sharing (no database), but API mocking is used for chatbot functionality
 
@@ -137,7 +137,7 @@ The application uses URL-based sharing with compressed data:
 
 ### Chatbot Testing
 The chatbot feature is thoroughly tested:
-- **API integration**: Tests mock the OpenRouter API to verify proper request formatting
+- **API integration**: Tests mock the Groq API to verify proper request formatting
 - **Data extraction**: Tests verify structured data is correctly extracted from natural language
 - **Autofill functionality**: Tests verify extracted data correctly populates forms
 - **Fallback behavior**: Tests verify rules-based fallback when API is unavailable
@@ -167,7 +167,7 @@ The chatbot feature is thoroughly tested:
 
 - **URL-based sharing**: The application does not use API endpoints for sharing - all sharing is URL-based
 - **No database**: No database is required for sharing - all data is stored in URL parameters
-- **Chatbot API**: The chatbot feature uses the `/api/chat` endpoint which communicates with OpenRouter API
+- **Chatbot API**: The chatbot feature uses the `/api/chat` endpoint which communicates with Groq API
 - **Client-side logic**: Tests focus on client-side logic, URL-based sharing workflows, and chatbot functionality
 - **Component tests**: Component tests verify UI functionality without requiring full rendering (where possible)
-- **API mocking**: All external API calls (OpenRouter) are mocked in tests for reliability and speed
+- **API mocking**: All external API calls (Groq) are mocked in tests for reliability and speed

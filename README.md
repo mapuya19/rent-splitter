@@ -11,7 +11,7 @@ A free, easy-to-use rent and utilities calculator for roommates. Split rent prop
 - 💵 **Multi-currency support** - Support for USD, EUR, GBP, CAD, AUD, and more
 - 🔗 **Shareable links** - Generate compressed URLs to share calculations with roommates
 - 📱 **Responsive design** - Fully optimized for desktop, tablet, and mobile devices
-- 🤖 **AI Chatbot Assistant** - Get help filling out forms or learn about features using an intelligent chatbot powered by Meta Llama
+- 🤖 **AI Chatbot Assistant** - Get help filling out forms or learn about features using an intelligent chatbot powered by Groq
 
 ## Getting Started
 
@@ -30,7 +30,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - [Tailwind CSS](https://tailwindcss.com) - Styling and responsive design
 - [Jest](https://jestjs.io) - Testing framework
 - [React Testing Library](https://testing-library.com/react) - Component testing
-- [Meta Llama 3.3 8B](https://openrouter.ai) - AI chatbot powered by OpenRouter API
+- [Groq](https://console.groq.com) - AI chatbot powered by Groq API (Llama 3.1)
 
 ## SEO Optimization
 
@@ -80,14 +80,14 @@ The application includes an AI-powered chatbot assistant that helps users:
 - **Mobile-optimized** - Fully responsive chatbot interface that adapts to mobile screen sizes
 - **Smooth animations** - Polished UI with fade-in, slide, and scale animations for better user experience
 
-The chatbot uses Meta Llama 3.3 8B model via OpenRouter API with a rules-based fallback for reliability.
+The chatbot uses Llama 3.1 8B Instant model via Groq API with a rules-based fallback for reliability.
 
 ## Environment Variables
 
 ### Required
 
-- `MODEL_API_KEY` - Your OpenRouter API key for chatbot functionality (Meta Llama model)
-  - Get your API key from: https://openrouter.ai/keys
+- `MODEL_API_KEY` - Your Groq API key for chatbot functionality (Llama 3.1 model)
+  - Get your API key from: https://console.groq.com/keys
   - **IMPORTANT**: Never commit your API key to version control
   - For local development: Create a `.env.local` file (see `.env.example` for template)
   - For Vercel deployment: Set it in your Vercel project settings under Environment Variables
@@ -111,7 +111,7 @@ The chatbot uses Meta Llama 3.3 8B model via OpenRouter API with a rules-based f
 2. **Vercel Deployment**:
    - Go to your Vercel project settings
    - Navigate to "Environment Variables"
-   - Add `MODEL_API_KEY` with your OpenRouter API key
+   - Add `MODEL_API_KEY` with your Groq API key
    - Redeploy your application
 
 **Note**: The `.env.local` file is gitignored and will not be committed. Use `.env.example` as a template for the required variables.
