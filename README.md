@@ -69,10 +69,16 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Environment Variables
 
-Optional environment variables for production:
+Required environment variables:
+
+- `GLM_API_KEY` - Your GLM 4.5 API key (currently hardcoded as fallback, but should be set via env var for production)
+
+Optional environment variables:
 
 - `NEXT_PUBLIC_APP_URL` - Your app's public URL (defaults to `https://rent-splitter.vercel.app`)
 - `NEXT_PUBLIC_GOOGLE_VERIFICATION` - Google Search Console verification code (optional)
+
+**Note**: The chatbot uses GLM 4.5 AI for natural language understanding. The API key is included in the codebase as a fallback, but for production deployments, set it as an environment variable in Vercel.
 
 ## License
 

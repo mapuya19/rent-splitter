@@ -12,6 +12,7 @@ import { calculateRentSplit } from '@/utils/calculations';
 import { compressCalculationData, decompressCalculationData } from '@/utils/compression';
 import { Calculator, Users, DollarSign } from 'lucide-react';
 import { Footer } from '@/components/Footer';
+import { Chatbot } from '@/components/Chatbot';
 
 export default function Home() {
   const [roommates, setRoommates] = useState<Roommate[]>([]);
@@ -111,6 +112,26 @@ export default function Home() {
     
     loadSharedData();
   }, []);
+
+  // Chatbot handlers
+  const handleAddRoommate = (name: string, income: number, roomSize?: number) => {
+    const roommate: Roommate = {
+      id: Math.random().toString(36).substring(2, 15),
+      name,
+      income,
+      roomSize,
+    };
+    setRoommates([...roommates, roommate]);
+  };
+
+  const handleAddCustomExpense = (name: string, amount: number) => {
+    const expense: CustomExpense = {
+      id: Math.random().toString(36).substring(2, 15),
+      name,
+      amount,
+    };
+    setCustomExpenses([...customExpenses, expense]);
+  };
 
   return (
     <main className="min-h-screen bg-gray-50 pt-8">
@@ -288,6 +309,14 @@ export default function Home() {
         </div>
       </div>
       <Footer />
+      <Chatbot
+        onSetTotalRent={setTotalRent}
+        onSetUtilities={setUtilities}
+        onAddRoommate={handleAddRoommate}
+        onAddCustomExpense={handleAddCustomExpense}
+        onSetCurrency={setSelectedCurrency}
+        onSetSplitMethod={setUseRoomSizeSplit}
+      />
     </main>
   );
 }
