@@ -248,10 +248,10 @@ Is this information accurate?`,
       });
 
       const response = await POST(request);
-      const responseData = await response.json();
 
       // Should still make API call but with undefined message
       expect(global.fetch).toHaveBeenCalled();
+      expect(response).toBeDefined();
     });
 
     it('should parse complex roommate data correctly', async () => {
