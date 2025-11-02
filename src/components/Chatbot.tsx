@@ -65,6 +65,8 @@ interface ChatbotProps {
   onSetUtilities: (utilities: number) => void;
   onAddRoommate: (name: string, income: number, roomSize?: number) => void;
   onAddCustomExpense: (name: string, amount: number) => void;
+  onRemoveRoommate: (name: string) => void;
+  onRemoveCustomExpense: (name: string) => void;
   onSetCurrency: (currency: string) => void;
   onSetSplitMethod: (useRoomSizeSplit: boolean) => void;
   currentState?: {
@@ -82,6 +84,8 @@ export function Chatbot({
   onSetUtilities,
   onAddRoommate,
   onAddCustomExpense,
+  onRemoveRoommate,
+  onRemoveCustomExpense,
   onSetCurrency,
   onSetSplitMethod,
   currentState,
@@ -179,6 +183,8 @@ export function Chatbot({
             onSetUtilities,
             onAddRoommate,
             onAddCustomExpense,
+            onRemoveRoommate,
+            onRemoveCustomExpense,
             onSetCurrency,
             onSetSplitMethod,
           },
@@ -195,9 +201,25 @@ export function Chatbot({
         setMessages((prev) => [...prev, botMessage]);
         setIsTyping(false);
 
-        // Store pending autofill if available
+        // If autofill is available, execute it immediately unless the user is asking a question
         if (botResponse.autofill) {
-          setPendingAutofill(() => botResponse.autofill!);
+          // Check if the user's message is clearly a question (should not auto-execute for questions)
+          // Questions typically end with "?" or start with question words
+          const isQuestion = userMessageText.trim().endsWith('?') || 
+            /^(what|how|when|where|why|who|can you|could you|would you|should i|do you|does|is|are|will|did|tell me|explain|help me)/i.test(userMessageText.trim());
+          
+          // Default to auto-executing autofill unless it's clearly a question
+          // This handles direct data statements like "rent is 3356", "my name is matthew", etc.
+          if (!isQuestion) {
+            // Execute autofill immediately after a short delay to show the bot message first
+            setTimeout(() => {
+              botResponse.autofill!();
+              setPendingAutofill(null);
+            }, 300);
+          } else {
+            // Store pending autofill only for questions
+            setPendingAutofill(() => botResponse.autofill!);
+          }
         } else {
           setPendingAutofill(null);
         }
@@ -227,6 +249,7 @@ export function Chatbot({
       'help-form': 'I\'d like help filling out the form',
       'explain-features': 'Can you explain how the app works?',
       'income-vs-room': 'What\'s the difference between income-based and room size-based splitting?',
+      'update-all': 'Fill all fields with everything you know from our conversation. Update all form fields with the rent, utilities, roommates, expenses, currency, and split method we discussed.',
     };
 
     setInputValue(quickMessages[action] || '');
@@ -337,6 +360,15 @@ export function Chatbot({
                 style={{ touchAction: 'manipulation' }}
               >
                 Income vs Room Size
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickAction('update-all')}
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px] bg-blue-50 border-blue-300 hover:bg-blue-100 text-blue-700 font-medium"
+                style={{ touchAction: 'manipulation' }}
+              >
+                Update All Fields
               </Button>
             </div>
           </div>

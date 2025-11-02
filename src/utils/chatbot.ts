@@ -3,6 +3,8 @@ interface ParsedData {
   utilities?: number;
   roommates?: Array<{ name: string; income?: number; roomSize?: number }>;
   customExpenses?: Array<{ name: string; amount: number }>;
+  removeRoommates?: string[];
+  removeCustomExpenses?: string[];
   currency?: string;
   useRoomSizeSplit?: boolean;
 }
@@ -11,189 +13,6 @@ interface BotResponse {
   content: string;
   autofill?: () => void;
   parsedData?: ParsedData;
-}
-
-/**
- * Extract rent amount from text
- */
-function extractRent(text: string): number | null {
-  // Patterns: "$2000", "2000", "rent is $2000", "monthly rent 2000"
-  const patterns = [
-    /rent\s*(?:is|:)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
-    /\$(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:per\s*month|monthly|rent)/i,
-    /(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:per\s*month|monthly|rent)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      const amount = parseFloat(match[1].replace(/,/g, ''));
-      if (amount > 0 && amount < 100000) return amount;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Extract utilities amount from text
- */
-function extractUtilities(text: string): number | null {
-  // Patterns: "utilities $300", "utilities are 300", "$300 utilities"
-  const patterns = [
-    /utilit(?:y|ies)\s*(?:is|are|:)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/i,
-    /\$(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:for\s*)?utilit(?:y|ies)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      const amount = parseFloat(match[1].replace(/,/g, ''));
-      if (amount > 0 && amount < 10000) return amount;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Extract roommate information from text
- */
-function extractRoommates(text: string): Array<{ name: string; income?: number; roomSize?: number }> {
-  const roommates: Array<{ name: string; income?: number; roomSize?: number }> = [];
-
-  // Pattern: "Alice makes $60k", "Bob earns 80000", "Charlie 70k", "Dave makes $5k per month"
-  const incomePatterns = [
-    // Annual: "$60k", "$60 thousand", "$60,000 per year", "60k annually"
-    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|has|:|makes?)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:k|thousand)?\s*(?:per\s*(?:year|annually|yr))?/gi,
-    // Monthly: "$5000 per month", "$5k/month", "5000 monthly"
-    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|has|:|makes?)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:k|thousand)?\s*(?:per\s*month|monthly|\/month)/gi,
-    // Weekly: "$1000 per week", "$1k/week"
-    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:makes|earns|income|salary|is|has|:|makes?)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:k|thousand)?\s*(?:per\s*week|weekly|\/week)/gi,
-  ];
-  
-  for (const pattern of incomePatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const name = match[1].trim();
-      let income = parseFloat(match[2].replace(/,/g, ''));
-      
-      // Check if it's k/thousand notation
-      const matchText = match[0].toLowerCase();
-      if (matchText.includes('k') || matchText.includes('thousand')) {
-        income *= 1000;
-      }
-      
-      // Convert to annual if monthly or weekly
-      if (matchText.includes('month') || matchText.includes('/month')) {
-        income *= 12; // Convert monthly to annual
-      } else if (matchText.includes('week') || matchText.includes('/week')) {
-        income *= 52; // Convert weekly to annual
-      }
-      
-      // Validate income range (annual: 20k to 500k typically)
-      if (income >= 20000 && income <= 500000) {
-        const existing = roommates.find(r => r.name.toLowerCase() === name.toLowerCase());
-        if (existing) {
-          existing.income = income;
-        } else {
-          roommates.push({ name, income });
-        }
-      }
-    }
-  }
-
-  // Pattern: "Alice room is 150 sq ft", "Bob's room 200 square feet"
-  const roomSizePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)(?:'s)?\s+room\s+(?:is|:)?\s*(\d+)\s*(?:sq\s*ft|square\s*feet|sqft)/gi;
-  let match;
-  while ((match = roomSizePattern.exec(text)) !== null) {
-    const name = match[1].trim();
-    const roomSize = parseInt(match[2]);
-    if (roomSize > 0 && roomSize < 5000) {
-      const existing = roommates.find(r => r.name.toLowerCase() === name.toLowerCase());
-      if (existing) {
-        existing.roomSize = roomSize;
-      } else {
-        roommates.push({ name, roomSize });
-      }
-    }
-  }
-
-  return roommates;
-}
-
-/**
- * Extract custom expenses from text
- */
-function extractCustomExpenses(text: string): Array<{ name: string; amount: number }> {
-  const expenses: Array<{ name: string; amount: number }> = [];
-
-  // Pattern: "Internet is $75", "Cable $50", "Parking 100"
-  const patterns = [
-    /(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:is|:)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)/gi,
-    /\$(\d+(?:,\d{3})*(?:\.\d{2})?)\s+for\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi,
-  ];
-
-  const expenseKeywords = ['internet', 'cable', 'parking', 'cleaning', 'wifi', 'netflix', 'spotify', 'gym'];
-
-  for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      let name, amount;
-      if (pattern.source.includes('for')) {
-        amount = parseFloat(match[1].replace(/,/g, ''));
-        name = match[2].trim();
-      } else {
-        name = match[1].trim();
-        amount = parseFloat(match[2].replace(/,/g, ''));
-      }
-
-      if (amount > 0 && amount < 10000) {
-        // Check if it's likely an expense
-        const nameLower = name.toLowerCase();
-        if (expenseKeywords.some(keyword => nameLower.includes(keyword)) || 
-            nameLower.includes('expense') || 
-            nameLower.includes('bill')) {
-          expenses.push({ name, amount });
-        }
-      }
-    }
-  }
-
-  return expenses;
-}
-
-/**
- * Detect intent from user message
- */
-function detectIntent(message: string): string {
-  const lowerMessage = message.toLowerCase();
-
-  // Help intents
-  if (lowerMessage.match(/(?:help|how|what|explain|tell me|show me)/i)) {
-    if (lowerMessage.match(/(?:form|fill|enter|input)/i)) {
-      return 'help-form';
-    }
-    if (lowerMessage.match(/(?:work|feature|do|use|app)/i)) {
-      return 'explain-features';
-    }
-    if (lowerMessage.match(/(?:income|room|size|difference|split)/i)) {
-      return 'income-vs-room';
-    }
-    return 'general-help';
-  }
-
-  // Autofill intent
-  if (lowerMessage.match(/(?:fill|autofill|auto|enter|add|set|put)/i)) {
-    return 'autofill';
-  }
-
-  // Check if message contains data
-  if (extractRent(message) || extractUtilities(message) || extractRoommates(message).length > 0) {
-    return 'autofill';
-  }
-
-  return 'general';
 }
 
 /**
@@ -207,6 +26,8 @@ export async function processChatbotMessage(
     onSetUtilities: (utilities: number) => void;
     onAddRoommate: (name: string, income: number, roomSize?: number) => void;
     onAddCustomExpense: (name: string, amount: number) => void;
+    onRemoveRoommate: (name: string) => void;
+    onRemoveCustomExpense: (name: string) => void;
     onSetCurrency: (currency: string) => void;
     onSetSplitMethod: (useRoomSizeSplit: boolean) => void;
   },
@@ -239,16 +60,100 @@ export async function processChatbotMessage(
     });
 
     if (!response.ok) {
-      throw new Error('API request failed');
+      const errorText = await response.text();
+      let errorDetails: unknown;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText || `HTTP ${response.status}`;
+      }
+
+      console.error('Model API request failed', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorDetails,
+      });
+
+      const errorMessage =
+        typeof errorDetails === 'object' && errorDetails !== null && 'error' in errorDetails
+          ? (errorDetails as { error?: string }).error || 'API request failed'
+          : typeof errorDetails === 'string'
+            ? errorDetails
+            : 'API request failed';
+
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
     const parsedData = data.parsedData as ParsedData | undefined;
 
+    const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
+    const formatSqFt = (value: number) => `${value} sq ft`;
+    const normalizeName = (name: string) => name.trim().toLowerCase();
+
+    const existingRoommatesMap = new Map<string, { name: string; income?: number; roomSize?: number }>();
+    currentState?.roommates?.forEach(roommate => {
+      if (roommate.name && roommate.name.trim()) {
+        existingRoommatesMap.set(normalizeName(roommate.name), roommate);
+      }
+    });
+
     // Create autofill function if data was extracted
     let autofill: (() => void) | undefined;
     if (parsedData && Object.keys(parsedData).length > 0) {
       const foundItems: string[] = [];
+      
+      // Track renames to avoid showing them as separate add/remove operations
+      const roommateRenames = new Map<string, string>(); // old name -> new name
+      const expenseRenames = new Map<string, string>(); // old name -> new name
+      
+      // Detect roommate renames (when removing and adding with same/similar data)
+      if (parsedData.removeRoommates && parsedData.roommates) {
+        parsedData.removeRoommates.forEach(oldName => {
+          const normalizedOldName = normalizeName(oldName);
+          const existing = existingRoommatesMap.get(normalizedOldName);
+          
+          if (existing) {
+            // Check if we're adding a roommate with the same income/roomSize
+            const matchingNewRoommate = parsedData.roommates!.find(rm => {
+              const normalizedNewName = normalizeName(rm.name);
+              return normalizedNewName !== normalizedOldName && 
+                     ((rm.income && rm.income === existing.income) || 
+                      (rm.roomSize && rm.roomSize === existing.roomSize));
+            });
+            
+            if (matchingNewRoommate) {
+              roommateRenames.set(normalizedOldName, matchingNewRoommate.name);
+            }
+          }
+        });
+      }
+      
+      // Detect expense renames
+      const existingExpensesMap = new Map<string, number>();
+      currentState?.customExpenses?.forEach(exp => {
+        if (exp.name && exp.name.trim()) {
+          existingExpensesMap.set(normalizeName(exp.name), exp.amount);
+        }
+      });
+      
+      if (parsedData.removeCustomExpenses && parsedData.customExpenses) {
+        parsedData.removeCustomExpenses.forEach(oldName => {
+          const normalizedOldName = normalizeName(oldName);
+          const existingAmount = existingExpensesMap.get(normalizedOldName);
+          
+          if (existingAmount) {
+            const matchingNewExpense = parsedData.customExpenses!.find(exp => {
+              const normalizedNewName = normalizeName(exp.name);
+              return normalizedNewName !== normalizedOldName && exp.amount === existingAmount;
+            });
+            
+            if (matchingNewExpense) {
+              expenseRenames.set(normalizedOldName, matchingNewExpense.name);
+            }
+          }
+        });
+      }
       
       if (parsedData.totalRent) {
         foundItems.push(`Monthly rent: $${parsedData.totalRent.toLocaleString()}`);
@@ -258,35 +163,168 @@ export async function processChatbotMessage(
       }
       if (parsedData.roommates && parsedData.roommates.length > 0) {
         parsedData.roommates.forEach(rm => {
-          if (rm.income) {
-            foundItems.push(`Roommate: ${rm.name} (income: $${rm.income.toLocaleString()})`);
+          if (!rm.name || !rm.name.trim()) {
+            return;
           }
-          if (rm.roomSize) {
-            foundItems.push(`Roommate: ${rm.name} (room size: ${rm.roomSize} sq ft)`);
+
+          const normalized = normalizeName(rm.name);
+          const existing = existingRoommatesMap.get(normalized);
+          
+          // Check if this is the target of a rename operation
+          const isRenameTarget = Array.from(roommateRenames.values()).some(
+            newName => normalizeName(newName) === normalized
+          );
+          
+          if (isRenameTarget) {
+            // This is handled by the rename message below
+            return;
+          }
+
+          if (existing) {
+            const updates: string[] = [];
+
+            if (rm.income && rm.income > 0) {
+              if (existing.income && existing.income > 0) {
+                if (existing.income !== rm.income) {
+                  updates.push(`income: ${formatCurrency(existing.income)} → ${formatCurrency(rm.income)}`);
+                }
+              } else {
+                updates.push(`set income to ${formatCurrency(rm.income)}`);
+              }
+            }
+
+            if (rm.roomSize && rm.roomSize > 0) {
+              if (existing.roomSize && existing.roomSize > 0) {
+                if (existing.roomSize !== rm.roomSize) {
+                  updates.push(`room size: ${formatSqFt(existing.roomSize)} → ${formatSqFt(rm.roomSize)}`);
+                }
+              } else {
+                updates.push(`set room size to ${formatSqFt(rm.roomSize)}`);
+              }
+            }
+
+            if (updates.length > 0) {
+              foundItems.push(`Update ${rm.name}: ${updates.join('; ')}`);
+            }
+          } else {
+            const summaryParts: string[] = [];
+            if (rm.income && rm.income > 0) {
+              summaryParts.push(`income ${formatCurrency(rm.income)}`);
+            }
+            if (rm.roomSize && rm.roomSize > 0) {
+              summaryParts.push(`room size ${formatSqFt(rm.roomSize)}`);
+            }
+
+            const summary = summaryParts.length > 0 ? ` (${summaryParts.join(', ')})` : '';
+            foundItems.push(`Add ${rm.name}${summary}`);
           }
         });
       }
+      
+      // Show expense operations (excluding renames which will be shown separately)
       if (parsedData.customExpenses && parsedData.customExpenses.length > 0) {
         parsedData.customExpenses.forEach(exp => {
-          foundItems.push(`Expense: ${exp.name} ($${exp.amount.toLocaleString()})`);
+          const isRenameTarget = Array.from(expenseRenames.values()).some(
+            newName => normalizeName(newName) === normalizeName(exp.name)
+          );
+          
+          if (!isRenameTarget) {
+            foundItems.push(`Expense: ${exp.name} ($${exp.amount.toLocaleString()})`);
+          }
+        });
+      }
+      
+      // Show roommate renames
+      roommateRenames.forEach((newName, oldNameNormalized) => {
+        // Find the original casing of the old name
+        const oldNameOriginal = Array.from(existingRoommatesMap.values()).find(
+          rm => normalizeName(rm.name) === oldNameNormalized
+        )?.name || oldNameNormalized;
+        
+        foundItems.push(`Rename roommate: ${oldNameOriginal} → ${newName}`);
+      });
+      
+      // Show expense renames
+      expenseRenames.forEach((newName, oldNameNormalized) => {
+        const oldNameOriginal = currentState?.customExpenses?.find(
+          exp => normalizeName(exp.name) === oldNameNormalized
+        )?.name || oldNameNormalized;
+        
+        foundItems.push(`Rename expense: ${oldNameOriginal} → ${newName}`);
+      });
+      
+      // Show removals (excluding those that are part of renames)
+      if (parsedData.removeRoommates && parsedData.removeRoommates.length > 0) {
+        parsedData.removeRoommates.forEach(name => {
+          if (name && name.trim()) {
+            const normalized = normalizeName(name);
+            if (!roommateRenames.has(normalized)) {
+              foundItems.push(`Remove roommate: ${name}`);
+            }
+          }
+        });
+      }
+      if (parsedData.removeCustomExpenses && parsedData.removeCustomExpenses.length > 0) {
+        parsedData.removeCustomExpenses.forEach(name => {
+          if (name && name.trim()) {
+            const normalized = normalizeName(name);
+            if (!expenseRenames.has(normalized)) {
+              foundItems.push(`Remove expense: ${name}`);
+            }
+          }
         });
       }
 
       // Only show confirmation if we found data
       if (foundItems.length > 0) {
         autofill = () => {
+          // Set split method FIRST if specified explicitly
+          if (parsedData.useRoomSizeSplit !== undefined) {
+            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
+          } else if (parsedData.roommates && parsedData.roommates.length > 0) {
+            // Auto-infer split method based on roommate data
+            // Check if any roommate has roomSize (not income) or income (not roomSize)
+            const hasRoomSizes = parsedData.roommates.some(rm => rm.roomSize && rm.roomSize > 0 && (!rm.income || rm.income === 0));
+            const hasIncomes = parsedData.roommates.some(rm => rm.income && rm.income > 0 && (!rm.roomSize || rm.roomSize === 0));
+            
+            // Only auto-set if we have a clear indication (all roommates use same type)
+            if (hasRoomSizes && !hasIncomes) {
+              callbacks.onSetSplitMethod(true); // Room size split
+            } else if (hasIncomes && !hasRoomSizes) {
+              callbacks.onSetSplitMethod(false); // Income split
+            }
+            // If mixed or unclear, don't auto-set (let current state persist)
+          }
+          
           // Fill in order: rent first, then utilities, then roommates
           if (parsedData.totalRent) callbacks.onSetTotalRent(parsedData.totalRent);
           if (parsedData.utilities) callbacks.onSetUtilities(parsedData.utilities);
           
-          // Validate and add roommates - ensure names are present
+          // Remove roommates FIRST (before adding/updating)
+          if (parsedData.removeRoommates) {
+            parsedData.removeRoommates.forEach(name => {
+              if (name && name.trim()) {
+                callbacks.onRemoveRoommate(name);
+              }
+            });
+          }
+          
+          // Add roommates - handleAddRoommate now allows incomplete roommates
           if (parsedData.roommates) {
             parsedData.roommates.forEach(rm => {
-              // CRITICAL: Ensure name is present before adding/updating
+              // Ensure name is present before adding/updating
               if (rm.name && rm.name.trim()) {
+                // handleAddRoommate will handle updates vs new roommates and allow incomplete data
                 callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
-              } else {
-                console.warn('Skipping roommate: name is missing or empty');
+              }
+            });
+          }
+          
+          // Remove expenses FIRST (before adding/updating)
+          if (parsedData.removeCustomExpenses) {
+            parsedData.removeCustomExpenses.forEach(name => {
+              if (name && name.trim()) {
+                callbacks.onRemoveCustomExpense(name);
               }
             });
           }
@@ -297,16 +335,12 @@ export async function processChatbotMessage(
               // CRITICAL: Ensure name and valid amount are present
               if (exp.name && exp.name.trim() && exp.amount > 0) {
                 callbacks.onAddCustomExpense(exp.name, exp.amount);
-              } else {
-                console.warn(`Skipping expense: name or amount is invalid (name: ${exp.name}, amount: ${exp.amount})`);
               }
+              // Silently skip invalid expenses - don't spam console
             });
           }
           
           if (parsedData.currency) callbacks.onSetCurrency(parsedData.currency);
-          if (parsedData.useRoomSizeSplit !== undefined) {
-            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
-          }
         };
       }
     }
@@ -317,205 +351,11 @@ export async function processChatbotMessage(
       parsedData,
     };
   } catch (error) {
-    console.error('LLM API error, falling back to rules:', error);
-    // Fallback to rules-based approach
-    return processChatbotMessageRules(message, callbacks);
-  }
-}
-
-/**
- * Process user message using rules-based approach (fallback)
- */
-function processChatbotMessageRules(
-  message: string,
-  callbacks: {
-    onSetTotalRent: (rent: number) => void;
-    onSetUtilities: (utilities: number) => void;
-    onAddRoommate: (name: string, income: number, roomSize?: number) => void;
-    onAddCustomExpense: (name: string, amount: number) => void;
-    onSetCurrency: (currency: string) => void;
-    onSetSplitMethod: (useRoomSizeSplit: boolean) => void;
-  }
-): BotResponse {
-  const intent = detectIntent(message);
-  const lowerMessage = message.toLowerCase();
-
-  // Help responses
-  if (intent === 'help-form') {
+    console.error('LLM API error:', error);
     return {
-      content: `I can help you fill out the form! Just tell me:\n\n` +
-        `• Your total monthly rent (e.g., "rent is $2000")\n` +
-        `• Monthly utilities (e.g., "utilities are $300")\n` +
-        `• Roommate information (e.g., "Alice makes $60k" or "Bob's room is 150 sq ft")\n` +
-        `• Any additional expenses (e.g., "Internet is $75")\n\n` +
-        `You can tell me all at once or one at a time!`,
+      content: 'Sorry, I\'m having trouble connecting right now. Please try again later or contact support if the issue continues.',
     };
   }
-
-  if (intent === 'explain-features') {
-    return {
-      content: `Rent Splitter helps you split rent and expenses fairly between roommates.\n\n` +
-        `**Two Split Methods:**\n` +
-        `• **Income-based:** Higher earners pay more (best for couples/families)\n` +
-        `• **Room size-based:** Larger rooms pay more, with adjustments for bathrooms, windows, etc. (best for friends/strangers)\n\n` +
-        `**Features:**\n` +
-        `• Split rent proportionally\n` +
-        `• Split utilities evenly\n` +
-        `• Add custom expenses\n` +
-        `• Generate shareable links\n` +
-        `• Support for multiple currencies`,
-    };
-  }
-
-  if (intent === 'income-vs-room') {
-    return {
-      content: `Here's the difference between the two split methods:\n\n` +
-        `**Income-Based Split:**\n` +
-        `• Rent is split based on annual income\n` +
-        `• Higher earners pay proportionally more\n` +
-        `• Best for: Couples or families living together\n\n` +
-        `**Room Size-Based Split:**\n` +
-        `• Rent is split based on square footage\n` +
-        `• Larger rooms pay more\n` +
-        `• You can adjust for: Private bathrooms (+15%), no windows (-10%), flex walls (-5%)\n` +
-        `• Best for: Friends or strangers living together\n\n` +
-        `Utilities are always split evenly regardless of method!`,
-    };
-  }
-
-  if (intent === 'general-help') {
-    return {
-      content: `I can help you with:\n\n` +
-        `• Understanding how the app works\n` +
-        `• Filling out the form automatically\n` +
-        `• Explaining the difference between split methods\n` +
-        `• Answering questions about features\n\n` +
-        `What would you like to know?`,
-    };
-  }
-
-  // Autofill logic
-  if (intent === 'autofill') {
-    const parsedData: ParsedData = {};
-    const foundItems: string[] = [];
-
-    // Extract rent
-    const rent = extractRent(message);
-    if (rent) {
-      parsedData.totalRent = rent;
-      foundItems.push(`Monthly rent: $${rent.toLocaleString()}`);
-    }
-
-    // Extract utilities
-    const utilities = extractUtilities(message);
-    if (utilities) {
-      parsedData.utilities = utilities;
-      foundItems.push(`Utilities: $${utilities.toLocaleString()}`);
-    }
-
-    // Extract roommates
-    const roommates = extractRoommates(message);
-    if (roommates.length > 0) {
-      parsedData.roommates = roommates;
-      roommates.forEach(rm => {
-        if (rm.income) {
-          foundItems.push(`Roommate: ${rm.name} (income: $${rm.income.toLocaleString()})`);
-        }
-        if (rm.roomSize) {
-          foundItems.push(`Roommate: ${rm.name} (room size: ${rm.roomSize} sq ft)`);
-        }
-      });
-    }
-
-    // Extract custom expenses
-    const expenses = extractCustomExpenses(message);
-    if (expenses.length > 0) {
-      parsedData.customExpenses = expenses;
-      expenses.forEach(exp => {
-        foundItems.push(`Expense: ${exp.name} ($${exp.amount.toLocaleString()})`);
-      });
-    }
-
-    // Check for split method preference
-    if (lowerMessage.match(/(?:income|salary|earn)/i) && lowerMessage.match(/(?:based|split)/i)) {
-      parsedData.useRoomSizeSplit = false;
-    } else if (lowerMessage.match(/(?:room|size|square|sq\s*ft)/i)) {
-      parsedData.useRoomSizeSplit = true;
-    }
-
-    // Check for currency
-    const currencyMatch = message.match(/\b(USD|EUR|GBP|CAD|AUD|JPY)\b/i);
-    if (currencyMatch) {
-      parsedData.currency = currencyMatch[1].toUpperCase();
-    }
-
-    if (foundItems.length > 0) {
-      return {
-        content: `I found the following information:\n\n${foundItems.join('\n')}\n\n` +
-          `Would you like me to fill this in? (Say "yes" or "fill it in" to confirm)`,
-        parsedData,
-        autofill: () => {
-          // Fill in order: rent first, then utilities, then roommates
-          if (parsedData.totalRent) callbacks.onSetTotalRent(parsedData.totalRent);
-          if (parsedData.utilities) callbacks.onSetUtilities(parsedData.utilities);
-          
-          // Validate and add roommates - ensure names are present
-          if (parsedData.roommates) {
-            parsedData.roommates.forEach(rm => {
-              // CRITICAL: Ensure name is present before adding/updating
-              if (rm.name && rm.name.trim()) {
-                callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
-              } else {
-                console.warn('Skipping roommate: name is missing or empty');
-              }
-            });
-          }
-          
-          // Validate and add expenses - ensure names are present
-          if (parsedData.customExpenses) {
-            parsedData.customExpenses.forEach(exp => {
-              // CRITICAL: Ensure name and valid amount are present
-              if (exp.name && exp.name.trim() && exp.amount > 0) {
-                callbacks.onAddCustomExpense(exp.name, exp.amount);
-              } else {
-                console.warn(`Skipping expense: name or amount is invalid (name: ${exp.name}, amount: ${exp.amount})`);
-              }
-            });
-          }
-          
-          if (parsedData.currency) callbacks.onSetCurrency(parsedData.currency);
-          if (parsedData.useRoomSizeSplit !== undefined) {
-            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
-          }
-        },
-      };
-    } else {
-      return {
-        content: `I couldn't find any rent or roommate information in your message. Could you try telling me:\n\n` +
-          `• "Rent is $2000"\n` +
-          `• "Utilities are $300"\n` +
-          `• "Alice makes $60k"\n` +
-          `• "Bob's room is 150 sq ft"\n\n` +
-          `Or say "help" for more guidance!`,
-      };
-    }
-  }
-
-  // Check for confirmation
-  if (lowerMessage.match(/(?:yes|yeah|yep|sure|ok|okay|fill|go ahead|do it)/i)) {
-    return {
-      content: `I'm ready to help! Tell me your rent information, roommate details, or ask me a question about how the app works.`,
-    };
-  }
-
-  // Default response
-  return {
-    content: `I'm here to help! I can:\n\n` +
-      `• Help you fill out the form automatically\n` +
-      `• Explain how the app works\n` +
-      `• Answer questions about features\n\n` +
-      `Try saying "help me fill the form" or ask me a question!`,
-  };
 }
 
 /**
@@ -523,6 +363,6 @@ function processChatbotMessageRules(
  */
 export function isConfirmation(message: string): boolean {
   const lowerMessage = message.toLowerCase();
-  return lowerMessage.match(/(?:yes|yeah|yep|sure|ok|okay|fill|go ahead|do it|confirm)/i) !== null;
+  return lowerMessage.match(/(?:yes|yeah|yep|sure|ok|okay|fill|go ahead|do it|confirm|update|apply|change it|make it happen|sounds good)/i) !== null;
 }
 

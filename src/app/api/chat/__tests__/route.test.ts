@@ -36,7 +36,7 @@ describe('Chat API Route', () => {
     console.error = originalConsoleError;
   });
 
-  const createMockRequest = (body: { message?: string; conversationHistory?: Array<{ role: string; content: string }> }): NextRequest => {
+  const createMockRequest = (body: { message?: string; conversationHistory?: Array<{ role: string; content: string }>; currentState?: unknown }): NextRequest => {
     return {
       json: jest.fn().mockResolvedValue(body),
     } as unknown as NextRequest;
@@ -48,11 +48,17 @@ describe('Chat API Route', () => {
       json: jest.fn().mockResolvedValue(data),
       text: jest.fn().mockResolvedValue(JSON.stringify(data)),
       status: ok ? 200 : 400,
+      headers: {
+        get: jest.fn().mockReturnValue(null),
+      },
     };
   };
 
   describe('POST /api/chat', () => {
     it('should return a successful response with parsed data', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const mockLLMResponse = {
         choices: [{
           message: {
@@ -99,6 +105,9 @@ describe('Chat API Route', () => {
     });
 
     it('should extract JSON from code blocks even when there is text before it', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const mockLLMResponse = {
         choices: [{
           message: {
@@ -146,6 +155,9 @@ Is this information accurate?`,
     });
 
     it('should handle plain text responses (non-JSON)', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const mockLLMResponse = {
         choices: [{
           message: {
@@ -171,6 +183,9 @@ Is this information accurate?`,
     });
 
     it('should include conversation history in API request', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const mockLLMResponse = {
         choices: [{
           message: {
@@ -204,6 +219,9 @@ Is this information accurate?`,
     });
 
     it('should handle API errors gracefully', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const errorResponse = {
         error: {
           message: 'Invalid API key',
@@ -228,6 +246,9 @@ Is this information accurate?`,
     });
 
     it('should handle network errors', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const request = createMockRequest({
@@ -243,6 +264,9 @@ Is this information accurate?`,
     });
 
     it('should handle missing message field', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const request = createMockRequest({
         conversationHistory: [],
       });
@@ -255,6 +279,9 @@ Is this information accurate?`,
     });
 
     it('should parse complex roommate data correctly', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const mockLLMResponse = {
         choices: [{
           message: {
@@ -294,7 +321,10 @@ Is this information accurate?`,
       expect(responseData.parsedData?.customExpenses).toHaveLength(1);
     });
 
-    it('should use API key from environment or fallback', async () => {
+    it('should use API key from environment', async () => {
+      // Set API key for this test
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
       const mockLLMResponse = {
         choices: [{
           message: {
@@ -318,9 +348,120 @@ Is this information accurate?`,
       await POST(request);
 
       const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
-      // Should contain Bearer token (either from env or fallback)
+      // Should contain Bearer token from environment configuration
       expect(fetchCall[1].headers.Authorization).toContain('Bearer');
       expect(fetchCall[1].headers.Authorization.length).toBeGreaterThan(10);
+    });
+
+    it('should include optimized system prompt with all critical rules', async () => {
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
+      const mockLLMResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              response: 'Test',
+              data: {},
+            }),
+          },
+        }],
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue(
+        createMockResponse(mockLLMResponse)
+      );
+
+      const request = createMockRequest({
+        message: 'Hello',
+        conversationHistory: [],
+        currentState: {
+          totalRent: 2000,
+          roommates: [{ name: 'Alice', income: 60000 }],
+        },
+      });
+
+      await POST(request);
+
+      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const requestBody = JSON.parse(fetchCall[1].body);
+      const systemMessage = requestBody.messages.find((m: { role: string }) => m.role === 'system');
+      
+      expect(systemMessage).toBeDefined();
+      const prompt = systemMessage.content;
+      
+      // Verify critical rules are present
+      expect(prompt).toContain('JSON object only');
+      expect(prompt).toContain('update existing roommates');
+      expect(prompt).toContain('CRITICAL NAME REQUIREMENT');
+      expect(prompt).toContain('MUST be provided FIRST');
+      expect(prompt).toContain('My name is X');
+      expect(prompt).toContain('Income is annual');
+      expect(prompt).toContain('rename');
+      expect(prompt).toContain('rent before other fields');
+      // Verify rename and expense rules are explicitly mentioned
+      expect(prompt).toContain('rename a roommate/expense');
+      expect(prompt).toContain('customExpenses');
+      expect(prompt).toContain('monthly expenses');
+      // Verify split method auto-detection rule
+      expect(prompt).toContain('Split method');
+      expect(prompt).toContain('roomSize');
+      expect(prompt).toContain('income');
+      
+      // Verify state context is included
+      expect(prompt).toContain('CURRENT FORM STATE');
+      expect(prompt).toContain('Total Rent: $2000');
+      expect(prompt).toContain('Alice');
+      
+      // Verify prompt is optimized (shorter than original)
+      // Original was ~2500+ tokens, optimized should be ~500-800 tokens
+      const promptLength = prompt.length;
+      expect(promptLength).toBeLessThan(3000); // Much shorter than original
+      expect(promptLength).toBeGreaterThan(200); // But still contains necessary info
+    });
+
+    it('should include placeholder name warning when placeholder names exist', async () => {
+      process.env.MODEL_API_KEY = 'test-api-key';
+      
+      const mockLLMResponse = {
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              response: 'Test',
+              data: {},
+            }),
+          },
+        }],
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue(
+        createMockResponse(mockLLMResponse)
+      );
+
+      const request = createMockRequest({
+        message: 'Hello',
+        conversationHistory: [],
+        currentState: {
+          totalRent: 2000,
+          roommates: [{ name: 'your name', income: 60000 }],
+        },
+      });
+
+      await POST(request);
+
+      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const requestBody = JSON.parse(fetchCall[1].body);
+      const systemMessage = requestBody.messages.find((m: { role: string }) => m.role === 'system');
+      
+      expect(systemMessage).toBeDefined();
+      const prompt = systemMessage.content;
+      
+      // Verify placeholder warning is included
+      expect(prompt).toContain('placeholder');
+      expect(prompt).toContain('your name');
+      
+      // Verify critical name requirement rule is present
+      expect(prompt).toContain('CRITICAL NAME REQUIREMENT');
+      expect(prompt).toContain('MUST be provided FIRST');
     });
   });
 });

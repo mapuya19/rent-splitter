@@ -57,7 +57,7 @@ app/api/chat/__tests__/
 - **Message processing**: Tests chatbot message processing with LLM API
 - **Autofill functionality**: Tests automatic form filling from extracted data
 - **Confirmation detection**: Tests recognition of user confirmations (yes, ok, etc.)
-- **Error handling**: Tests graceful fallback to rules-based responses
+- **Error handling**: Tests user messaging when the API is unavailable
 - **Conversation history**: Tests proper handling of conversation context
 - **Data extraction**: Tests extraction of rent, utilities, roommates, expenses from natural language
 - **API integration**: Tests communication with Groq API
@@ -140,7 +140,7 @@ The chatbot feature is thoroughly tested:
 - **API integration**: Tests mock the Groq API to verify proper request formatting
 - **Data extraction**: Tests verify structured data is correctly extracted from natural language
 - **Autofill functionality**: Tests verify extracted data correctly populates forms
-- **Fallback behavior**: Tests verify rules-based fallback when API is unavailable
+- **Error messaging**: Tests verify user guidance when the API is unavailable
 - **Error scenarios**: Tests cover network errors, API failures, and invalid responses
 - **Conversation flow**: Tests verify proper handling of multi-turn conversations
 

@@ -16,71 +16,33 @@ export async function POST(request: NextRequest) {
   try {
     const { message, conversationHistory, currentState } = await request.json();
 
-    const systemPrompt = `You are a helpful assistant for a rent splitting calculator app. Your job is to:
-1. Help users understand how to use the app
-2. Extract information from their messages to fill out the form
-3. Provide friendly, clear responses
-4. AVOID creating duplicate roommates or expenses - UPDATE existing ones instead
-
-CRITICAL: When users provide information, you MUST respond with ONLY valid JSON (no markdown, no code blocks, no extra text). Format your response as a JSON object with this EXACT structure:
+    const systemPrompt = `You help with a rent-splitting calculator. Reply with ONE JSON object only (no markdown, no prose before/after) using this shape:
 {
-  "response": "Your natural language response. If you found data to extract, mention what you found and ask if they want you to fill it in.",
+  "response": "friendly natural-language reply (never restate JSON/form values)",
   "data": {
-    "totalRent": number (if mentioned or updated, e.g. 2000),
-    "utilities": number (if mentioned or updated, e.g. 300),
-    "roommates": [{"name": "string", "income": number (optional), "roomSize": number (optional)}],
+    "totalRent": number,
+    "utilities": number,
+    "roommates": [{"name": "string", "income": number, "roomSize": number}],
     "customExpenses": [{"name": "string", "amount": number}],
-    "currency": "USD" | "EUR" | "GBP" | "CAD" | "AUD" (if mentioned),
-    "useRoomSizeSplit": boolean (true if room size mentioned, false if income mentioned)
+    "removeRoommates": ["string"],
+    "removeCustomExpenses": ["string"],
+    "currency": "USD"|"EUR"|"GBP"|"CAD"|"AUD",
+    "useRoomSizeSplit": boolean
   }
 }
 
-CRITICAL RULES FOR PREVENTING DUPLICATES:
-1. **ALWAYS check existing data first**: The user's current form state will be provided in the conversation context. Before adding a roommate, check if a roommate with the same name (case-insensitive) already exists.
-2. **UPDATE instead of ADD**: If a roommate with the same name exists, you MUST update that roommate's information (income or roomSize) rather than creating a duplicate.
-3. **Only add NEW roommates**: Only include roommates in the response if they don't already exist in the current form state.
-4. **Same for expenses**: Check if custom expenses with the same name exist before adding new ones.
-
-CRITICAL RULES FOR NAME ASSOCIATION:
-1. **NEVER extract income/roomSize without a name**: Income and room size MUST always be associated with a specific roommate name. If you see "$60k" without a name context, ask the user which roommate this refers to.
-2. **NEVER extract expense amounts without a name**: Expense amounts MUST always be associated with an expense name. If you see "$75" without context, ask what expense this is for.
-3. **When updating**: Always include the name in your response data. For example: {"roommates": [{"name": "Alice", "income": 60000}]} - NEVER omit the name field.
-
-FIELD FILLING ORDER (IMPORTANT):
-Always encourage users to fill the form from top to bottom in this order:
-1. **Total Monthly Rent** (required first - rent must be set before adding roommates)
-2. **Monthly Utilities** (recommended second)
-3. **Roommates** (can only be added after rent is set)
-4. **Custom Expenses** (optional, can be added anytime)
-5. **Split Method** (can be set anytime)
-
-IMPORTANT: If rent is not set (totalRent is 0 or missing), remind users to set rent first before adding roommates. Calculations cannot work without rent!
-
-INCOME PARSING RULES (VERY IMPORTANT):
-- Income is ALWAYS annual (yearly) salary, NOT monthly
-- "$60k" or "$60 thousand" = 60000 (multiply by 1000)
-- "$60,000" = 60000 (already annual)
-- "$5000 per month" = 60000 (multiply by 12: 5000 * 12 = 60000)
-- "$5000/month" = 60000
-- Validate income ranges: typically 20,000 to 500,000 for annual income
-- If user says "monthly income", convert to annual by multiplying by 12
-- If user says "weekly income", convert to annual by multiplying by 52
-- If ambiguous, default to annual and clarify in response
-
-ROOMMATE MATCHING:
-- Match roommates by name (case-insensitive, ignore extra spaces)
-- "John" matches "john", "John Smith" matches "john smith"
-- When updating: include the FULL roommate object with ALL fields (name, income if income-based, roomSize if room-size-based)
-
-OTHER IMPORTANT RULES: 
-- Return ONLY the JSON object, nothing else
-- Do NOT wrap JSON in markdown code blocks
-- Do NOT add any text before or after the JSON
-- If no data is extracted, include "data": {} with empty object
-- Room size should be in square feet
-- Be conversational and helpful in your "response" field text
-- If extracting data, clearly list what you found (mention if updating vs adding) and ask for confirmation
-- Always confirm income format if uncertain (e.g., "I'm setting Alice's annual income to $60,000. Is that correct?")`;
+Key rules:
+- Always read the provided state first; update existing roommates/expenses instead of creating duplicates.
+- CRITICAL NAME REQUIREMENT: User's name MUST be provided FIRST before accepting any income/roomSize data. If user says "my income is X" or "mine is X" without telling you their name, ask "What's your name? I need to know who this belongs to." Do NOT create roommates with placeholder names like "you", "your name", "unknown", "user", "me", "I".
+- "My name is X" (or similar) MUST add/update roommate X immediately. This is REQUIRED before accepting income/roomSize for that person.
+- When renaming from placeholder names ("you", "your name", etc.) to actual name: add new name with existing data, include old placeholder in removeRoommates. Example: If "your name" exists with income $60k, and user says "my name is matthew", respond with {"roommates": [{"name": "matthew", "income": 60000}], "removeRoommates": ["your name"]}.
+- Pronouns ("my", "mine", "I", "me") refer to the user's roommate entry ONLY if you know their name from conversation. If unknown, ask for name first - DO NOT guess or use placeholders.
+- Income is annual. Convert "$5k/month" → 60000, "$1k/week" → 52000. Clarify if uncertain.
+- To rename a roommate/expense: add the new name with existing data, and include the old name in removeRoommates/removeCustomExpenses.
+- To add/update monthly expenses: use customExpenses array. Update existing expenses by matching name (case-insensitive).
+- Split method: If adding roommates with roomSize (not income), set useRoomSizeSplit=true. If adding with income (not roomSize), set useRoomSizeSplit=false. If user explicitly requests "room size split" or "income split", set accordingly.
+- If rent is 0, remind the user to set rent before other fields.
+- When the user confirms an action ("yes", "go ahead", etc.), include the data immediately.`;
 
     // Add current form state to context if provided
     let stateContext = '';
@@ -94,18 +56,22 @@ OTHER IMPORTANT RULES:
       const rentStatus = totalRent > 0 ? 'SET' : 'NOT SET (REQUIRED)';
       const rentWarning = totalRent <= 0 ? '\n⚠️ WARNING: Rent is not set! Users should set rent BEFORE adding roommates.' : '';
       
-      stateContext = `\n\nCURRENT FORM STATE (check this before adding anything to avoid duplicates):\n` +
+      // Check for placeholder names that need to be renamed
+      const placeholderNames = ['you', 'your name', 'unknown', 'user', 'me', 'i'];
+      const hasPlaceholderRoommate = roommates?.some((r: { name: string; income?: number; roomSize?: number }) => 
+        placeholderNames.includes(r.name.trim().toLowerCase())
+      );
+      const placeholderWarning = hasPlaceholderRoommate 
+        ? '\n⚠️ WARNING: Found placeholder roommate name(s) ("you", "your name", etc.). If user provides their actual name, rename the placeholder by adding new name with existing data and removing the placeholder.' 
+        : '';
+      
+      stateContext = `\n\nCURRENT FORM STATE:\n` +
         `- Total Rent: $${totalRent || 0} [${rentStatus}]${rentWarning}\n` +
         `- Utilities: $${utilities || 0}\n` +
         `- Roommates: ${existingRoommates}\n` +
         `- Custom Expenses: ${existingExpenses}\n` +
         `- Currency: ${currency || 'USD'}\n` +
-        `- Split Method: ${useRoomSizeSplit ? 'Room Size' : 'Income'}\n` +
-        `\nIMPORTANT RULES:\n` +
-        `1. Before adding any roommate, check if they already exist in the list above. If they exist, UPDATE their information instead of adding a duplicate.\n` +
-        `2. ALWAYS associate income/roomSize with a name. Never extract income without knowing which roommate it belongs to.\n` +
-        `3. ALWAYS associate expense amounts with expense names. Never extract amounts without knowing what expense it is.\n` +
-        `4. If rent is 0, remind the user to set rent FIRST before adding roommates.`;
+        `- Split Method: ${useRoomSizeSplit ? 'Room Size' : 'Income'}${placeholderWarning}`;
     }
 
     const messages: ChatMessage[] = [
@@ -136,24 +102,41 @@ OTHER IMPORTANT RULES:
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Model API error:', error);
+      const errorText = await response.text();
+      let parsedError: unknown;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = errorText;
+      }
+
+      const requestId = response.headers.get('x-request-id') || undefined;
+      console.error('Model API error', {
+        status: response.status,
+        statusText: response.statusText,
+        requestId,
+        body: parsedError,
+      });
       
       // If it's a model ID error, try to provide helpful information
       if (response.status === 400) {
-        try {
-          const errorData = JSON.parse(error);
-          if (errorData.error?.message?.includes('not a valid model')) {
-            console.error('Model ID error. Current model: llama-3.1-8b-instant');
-            console.error('Available Groq models: llama-3.1-8b-instant, llama-3.1-70b-versatile, mixtral-8x7b-32768, openai/gpt-oss-20b');
-          }
-        } catch {
-          // Ignore parse errors
+        const errorMessage =
+          typeof parsedError === 'object' && parsedError !== null && 'error' in parsedError
+            ? (parsedError as { error?: { message?: string } }).error?.message
+            : undefined;
+
+        if (errorMessage?.includes('not a valid model')) {
+          console.error('Model ID error. Current model: llama-3.1-8b-instant');
+          console.error('Available Groq models: llama-3.1-8b-instant, llama-3.1-70b-versatile, mixtral-8x7b-32768, openai/gpt-oss-20b');
         }
       }
       
       return NextResponse.json(
-        { error: 'Failed to get response from AI' },
+        {
+          error: 'Failed to get response from AI',
+          details: parsedError,
+          requestId,
+        },
         { status: response.status }
       );
     }
@@ -170,6 +153,8 @@ OTHER IMPORTANT RULES:
         utilities?: number;
         roommates?: Array<{ name: string; income?: number; roomSize?: number }>;
         customExpenses?: Array<{ name: string; amount: number }>;
+        removeRoommates?: string[];
+        removeCustomExpenses?: string[];
         currency?: string;
         useRoomSizeSplit?: boolean;
       };

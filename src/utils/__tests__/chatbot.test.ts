@@ -26,6 +26,8 @@ describe('Chatbot Utils', () => {
       onSetUtilities: jest.fn(),
       onAddRoommate: jest.fn(),
       onAddCustomExpense: jest.fn(),
+      onRemoveRoommate: jest.fn(),
+      onRemoveCustomExpense: jest.fn(),
       onSetCurrency: jest.fn(),
       onSetSplitMethod: jest.fn(),
     };
@@ -107,7 +109,7 @@ describe('Chatbot Utils', () => {
       expect(mockCallbacks.onSetSplitMethod).toHaveBeenCalledWith(false);
     });
 
-    it('should handle API errors and fallback to rules-based approach', async () => {
+    it('should surface helpful message when API responds with error', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
         json: jest.fn().mockResolvedValue({ error: 'API error' }),
@@ -119,12 +121,12 @@ describe('Chatbot Utils', () => {
         mockCallbacks
       );
 
-      // Should fallback to rules-based response
-      expect(result.content).toContain('I can help you fill out the form');
-      expect(result.content).toBeDefined();
+      expect(result.content).toContain('Please try again later');
+      expect(result.autofill).toBeUndefined();
+      expect(result.parsedData).toBeUndefined();
     });
 
-    it('should handle network errors gracefully', async () => {
+    it('should handle network errors gracefully with guidance message', async () => {
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const result = await processChatbotMessage(
@@ -133,8 +135,9 @@ describe('Chatbot Utils', () => {
         mockCallbacks
       );
 
-      // Should fallback to rules-based response
-      expect(result.content).toBeDefined();
+      expect(result.content).toContain('Please try again later');
+      expect(result.autofill).toBeUndefined();
+      expect(result.parsedData).toBeUndefined();
     });
 
     it('should pass conversation history to API', async () => {
@@ -213,6 +216,297 @@ describe('Chatbot Utils', () => {
 
       expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('Alice', 60000, 150);
     });
+
+    it('should handle roommate updates using current state context', async () => {
+      const mockApiResponse = {
+        content: "I've updated Alice's income to $70,000",
+        parsedData: {
+          roommates: [
+            { name: 'Alice', income: 70000 },
+          ],
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'Alice now makes $70k',
+        [],
+        mockCallbacks,
+        {
+          roommates: [
+            { name: 'Alice', income: 60000 },
+          ],
+        }
+      );
+
+      expect(result.content).toBe("I've updated Alice's income to $70,000");
+      expect(result.autofill).toBeDefined();
+      expect(result.parsedData?.roommates).toEqual([{ name: 'Alice', income: 70000 }]);
+
+      result.autofill!();
+      expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('Alice', 70000, undefined);
+    });
+
+    it('should handle roommate rename by removing old and adding new', async () => {
+      const mockApiResponse = {
+        content: 'Renamed Alice to Alicia',
+        parsedData: {
+          roommates: [
+            { name: 'Alicia', income: 60000, roomSize: 150 },
+          ],
+          removeRoommates: ['Alice'],
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'Rename Alice to Alicia',
+        [],
+        {
+          ...mockCallbacks,
+          onRemoveRoommate: jest.fn(),
+        },
+        {
+          roommates: [
+            { name: 'Alice', income: 60000, roomSize: 150 },
+          ],
+        }
+      );
+
+      expect(result.autofill).toBeDefined();
+      
+      // Execute autofill
+      const extendedCallbacks = {
+        ...mockCallbacks,
+        onRemoveRoommate: jest.fn(),
+      };
+      
+      await processChatbotMessage(
+        'Rename Alice to Alicia',
+        [],
+        extendedCallbacks,
+        {
+          roommates: [
+            { name: 'Alice', income: 60000, roomSize: 150 },
+          ],
+        }
+      ).then(res => res.autofill!());
+
+      expect(extendedCallbacks.onRemoveRoommate).toHaveBeenCalledWith('Alice');
+      expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('Alicia', 60000, 150);
+    });
+
+    it('should handle expense rename by removing old and adding new', async () => {
+      const mockApiResponse = {
+        content: 'Renamed Internet to WiFi',
+        parsedData: {
+          customExpenses: [
+            { name: 'WiFi', amount: 75 },
+          ],
+          removeCustomExpenses: ['Internet'],
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'Rename Internet to WiFi',
+        [],
+        {
+          ...mockCallbacks,
+          onRemoveCustomExpense: jest.fn(),
+        },
+        {
+          customExpenses: [
+            { name: 'Internet', amount: 75 },
+          ],
+        }
+      );
+
+      expect(result.autofill).toBeDefined();
+      
+      // Execute autofill
+      const extendedCallbacks = {
+        ...mockCallbacks,
+        onRemoveCustomExpense: jest.fn(),
+      };
+      
+      await processChatbotMessage(
+        'Rename Internet to WiFi',
+        [],
+        extendedCallbacks,
+        {
+          customExpenses: [
+            { name: 'Internet', amount: 75 },
+          ],
+        }
+      ).then(res => res.autofill!());
+
+      expect(extendedCallbacks.onRemoveCustomExpense).toHaveBeenCalledWith('Internet');
+      expect(mockCallbacks.onAddCustomExpense).toHaveBeenCalledWith('WiFi', 75);
+    });
+
+    it('should auto-detect split method based on roommate data (room size)', async () => {
+      const mockApiResponse = {
+        content: 'Added roommate with room size',
+        parsedData: {
+          roommates: [
+            { name: 'Alice', roomSize: 150 },
+          ],
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'Alice has a 150 sq ft room',
+        [],
+        mockCallbacks
+      );
+
+      expect(result.autofill).toBeDefined();
+      result.autofill!();
+
+      // Should auto-set to room size split
+      expect(mockCallbacks.onSetSplitMethod).toHaveBeenCalledWith(true);
+      expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('Alice', 0, 150);
+    });
+
+    it('should auto-detect split method based on roommate data (income)', async () => {
+      const mockApiResponse = {
+        content: 'Added roommate with income',
+        parsedData: {
+          roommates: [
+            { name: 'Bob', income: 60000 },
+          ],
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'Bob makes $60k',
+        [],
+        mockCallbacks
+      );
+
+      expect(result.autofill).toBeDefined();
+      result.autofill!();
+
+      // Should auto-set to income split
+      expect(mockCallbacks.onSetSplitMethod).toHaveBeenCalledWith(false);
+      expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('Bob', 60000, undefined);
+    });
+
+    it('should prioritize explicit split method over auto-detection', async () => {
+      const mockApiResponse = {
+        content: 'Added roommate and set split method',
+        parsedData: {
+          roommates: [
+            { name: 'Alice', roomSize: 150 },
+          ],
+          useRoomSizeSplit: false, // Explicitly set to false
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'Switch to income split and add Alice with 150 sq ft room',
+        [],
+        mockCallbacks
+      );
+
+      expect(result.autofill).toBeDefined();
+      result.autofill!();
+
+      // Should use explicit value, not auto-detect
+      expect(mockCallbacks.onSetSplitMethod).toHaveBeenCalledWith(false);
+      expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('Alice', 0, 150);
+    });
+
+    it('should handle renaming from placeholder name "your name" to actual name', async () => {
+      const mockApiResponse = {
+        content: 'I\'ve updated your name to Matthew',
+        parsedData: {
+          roommates: [
+            { name: 'matthew', income: 60000 },
+          ],
+          removeRoommates: ['your name'],
+        },
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const extendedCallbacks = {
+        ...mockCallbacks,
+        onRemoveRoommate: jest.fn(),
+      };
+
+      const result = await processChatbotMessage(
+        'my name is matthew',
+        [],
+        extendedCallbacks,
+        {
+          roommates: [
+            { name: 'your name', income: 60000 },
+          ],
+        }
+      );
+
+      expect(result.autofill).toBeDefined();
+      result.autofill!();
+
+      // Should remove placeholder and add actual name
+      expect(extendedCallbacks.onRemoveRoommate).toHaveBeenCalledWith('your name');
+      expect(mockCallbacks.onAddRoommate).toHaveBeenCalledWith('matthew', 60000, undefined);
+    });
+
+    it('should ask for name if user provides income without name', async () => {
+      const mockApiResponse = {
+        content: 'What\'s your name? I need to know who this income belongs to.',
+        parsedData: {},
+      };
+
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(mockApiResponse),
+      });
+
+      const result = await processChatbotMessage(
+        'my income is $60k',
+        [], // No conversation history with name
+        mockCallbacks
+      );
+
+      // Should not have autofill - needs name first
+      expect(result.autofill).toBeUndefined();
+      expect(result.content).toContain('name');
+      expect(mockCallbacks.onAddRoommate).not.toHaveBeenCalled();
+    });
   });
 
   describe('isConfirmation', () => {
@@ -232,6 +526,8 @@ describe('Chatbot Utils', () => {
       expect(isConfirmation('go ahead')).toBe(true);
       expect(isConfirmation('do it')).toBe(true);
       expect(isConfirmation('confirm')).toBe(true);
+      expect(isConfirmation('update the fields')).toBe(true);
+      expect(isConfirmation('apply changes')).toBe(true);
     });
 
     it('should not recognize non-confirmations', () => {
