@@ -92,7 +92,7 @@ function getCurrencyCode(currency: string): number {
     'CHF': 7, 'SEK': 8, 'NOK': 9, 'DKK': 10, 'PLN': 11, 'CZK': 12,
     'HUF': 13, 'BRL': 14, 'MXN': 15, 'INR': 16, 'CNY': 17, 'KRW': 18,
     'SGD': 19, 'HKD': 20, 'NZD': 21, 'ZAR': 22, 'TRY': 23, 'RUB': 24,
-    'ILS': 25, 'AED': 26, 'SAR': 27, 'EGP': 28, 'THB': 29, 'PHP': 30,
+    'AED': 26, 'EGP': 28, 'THB': 29, 'PHP': 30,
     'IDR': 31, 'MYR': 32, 'VND': 33
   };
   return currencyMap[currency] || 1; // Default to USD if not found
@@ -107,7 +107,7 @@ function getCurrencyFromCode(code: number): string {
     7: 'CHF', 8: 'SEK', 9: 'NOK', 10: 'DKK', 11: 'PLN', 12: 'CZK',
     13: 'HUF', 14: 'BRL', 15: 'MXN', 16: 'INR', 17: 'CNY', 18: 'KRW',
     19: 'SGD', 20: 'HKD', 21: 'NZD', 22: 'ZAR', 23: 'TRY', 24: 'RUB',
-    25: 'ILS', 26: 'AED', 27: 'SAR', 28: 'EGP', 29: 'THB', 30: 'PHP',
+    26: 'AED', 28: 'EGP', 29: 'THB', 30: 'PHP',
     31: 'IDR', 32: 'MYR', 33: 'VND'
   };
   return codeMap[code] || 'USD'; // Default to USD if not found

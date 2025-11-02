@@ -22,16 +22,15 @@
    - Vercel will auto-detect Next.js
    - Click "Deploy"
 
-3. **Environment Variables (Optional)**
+3. **Environment Variables**
    - In Vercel dashboard, go to Settings > Environment Variables
-   - Add: `NEXT_PUBLIC_APP_URL` = `https://your-app-name.vercel.app`
+   - **Required**: Add `MODEL_API_KEY` with your Groq API key (get from [console.groq.com/keys](https://console.groq.com/keys))
+   - **Optional**: Add `NEXT_PUBLIC_APP_URL` = `https://your-app-name.vercel.app`
 
 ### Shareable Links
-The shareable links work automatically in production using URL-based sharing:
-- **No database required** - all data is encoded in the URL
-- **Base64 encoding** - calculation data is safely encoded in URL parameters
-- **Complete data sharing** - includes currency, split method, and all calculation data
-- **Works offline** - shared links work without server dependencies
+URL-based sharing with compressed data encoding:
+- No database required (all data in URL)
+- Includes currency, split method, and all calculation data
 
 ### Features Included
 - ✅ Square footage-based rent splitting

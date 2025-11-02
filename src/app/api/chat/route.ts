@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     "customExpenses": [{"name": "string", "amount": number}],
     "removeRoommates": ["string"],
     "removeCustomExpenses": ["string"],
-    "currency": "USD"|"EUR"|"GBP"|"CAD"|"AUD",
+    "currency": "USD"|"EUR"|"GBP"|"CAD"|"AUD"|"JPY"|"CHF"|"SEK"|"NOK"|"DKK"|"PLN"|"CZK"|"HUF"|"BRL"|"MXN"|"INR"|"CNY"|"KRW"|"SGD"|"HKD"|"NZD"|"ZAR"|"TRY"|"RUB"|"AED"|"EGP"|"THB"|"PHP"|"IDR"|"MYR"|"VND",
     "useRoomSizeSplit": boolean
   }
 }
@@ -41,6 +41,7 @@ Key rules:
 - To rename a roommate/expense: add the new name with existing data, and include the old name in removeRoommates/removeCustomExpenses.
 - To add/update monthly expenses: use customExpenses array. Update existing expenses by matching name (case-insensitive).
 - Split method: If adding roommates with roomSize (not income), set useRoomSizeSplit=true. If adding with income (not roomSize), set useRoomSizeSplit=false. If user explicitly requests "room size split" or "income split", set accordingly.
+- Currency: When user requests to change currency (e.g., "change to EUR", "use pounds", "switch to Japanese Yen"), set the currency field to the appropriate 3-letter code (e.g., "EUR", "GBP", "JPY"). You can recognize currencies by name, symbol, or code. If user says "remove currency" or "reset currency", set it to "USD" (default).
 - If rent is 0, remind the user to set rent before other fields.
 - When the user confirms an action ("yes", "go ahead", etc.), include the data immediately.`;
 

@@ -26,66 +26,38 @@ app/api/chat/__tests__/
 ## Test Categories
 
 ### 1. Basic Functionality Tests (`basic.test.ts`)
-- **Rent calculations**: Basic income-based splitting
-- **Currency formatting**: Tests for proper currency display
-- **Core functionality**: Verifies the testing setup works correctly
+- Basic rent calculations, currency formatting, and core functionality verification
 
 ### 2. Utility Tests (`utils/__tests__/`)
 
 #### `calculations.test.ts`
-- **Rent calculations**: Tests for income-based and room-size-based splitting
-- **Utilities splitting**: Tests for even distribution of utilities
-- **Custom expenses**: Tests for custom expense handling
-- **Edge cases**: Tests for zero values, single roommate, etc.
-- **Data validation**: Ensures calculation results are correct
+- Rent calculations (income-based and room-size-based), utilities splitting, custom expenses
+- Edge cases and data validation
 
 #### `adjustments.test.ts`
-- **Private bathroom adjustment**: Tests 15% rent adjustment for private bathrooms
-- **Window adjustments**: Tests rent reduction for rooms without windows
-- **Flex wall adjustments**: Tests rent adjustments for flexible walls
-- **Combined adjustments**: Tests multiple adjustments applied together
-- **Adjustment calculations**: Verifies adjustment amounts are correct
+- Private bathroom, window, and flex wall adjustments
+- Combined adjustments and calculation verification
 
 #### `compression.test.ts`
-- **Data compression**: Tests URL compression for shareable links
-- **Data decompression**: Tests decompression of compressed data
-- **Compression ratio**: Tests that compression reduces URL length
-- **Edge cases**: Tests with empty data, missing fields, etc.
-- **Data integrity**: Ensures compressed data matches original after decompression
+- URL compression/decompression, compression ratio, data integrity
+- Edge cases with empty/missing data
 
 #### `chatbot.test.ts`
-- **Message processing**: Tests chatbot message processing with LLM API
-- **Autofill functionality**: Tests automatic form filling from extracted data
-- **Confirmation detection**: Tests recognition of user confirmations (yes, ok, etc.)
-- **Error handling**: Tests user messaging when the API is unavailable
-- **Conversation history**: Tests proper handling of conversation context
-- **Data extraction**: Tests extraction of rent, utilities, roommates, expenses from natural language
-- **API integration**: Tests communication with Groq API
-- **Edge cases**: Tests with missing data, network errors, API failures
+- Message processing, autofill functionality, and confirmation detection
+- Data extraction from natural language (rent, utilities, roommates, expenses)
+- Error handling, conversation history, and edge cases
 
 ### 3. Integration Tests (`integration/sharing.test.ts`)
-- **Complete workflow**: Tests the full URL-based sharing process
-- **Encoding/decoding**: Tests data compression and decompression
-- **URL generation**: Tests shareable URL creation
-- **Multiple scenarios**: Tests different calculation scenarios (income-based, room-size-based, different currencies)
-- **URL length limits**: Tests handling of large datasets with compression
-- **Error handling**: Tests graceful handling of invalid/corrupted data
+- Complete URL-based sharing workflow, encoding/decoding, URL generation
+- Multiple scenarios, URL length limits, and error handling
 
 ### 4. Component Tests (`components/simple-sharing.test.tsx`)
-- **Frontend sharing**: Tests the UI sharing functionality
-- **Core logic**: Tests rent split calculations for sharing scenarios
-- **Room size splitting**: Tests room-size-based splitting for sharing
-- **Edge cases**: Tests single roommate scenarios
+- Frontend sharing UI, rent split calculations, and edge cases
 
 ### 5. API Route Tests (`app/api/chat/__tests__/route.test.ts`)
-- **Chat API endpoint**: Tests the `/api/chat` POST endpoint
-- **LLM integration**: Tests communication with Groq API (Llama 3.1 model)
-- **Data extraction**: Tests parsing of structured data from LLM responses
-- **JSON parsing**: Tests extraction of JSON from LLM responses (including code blocks)
-- **Error handling**: Tests API errors, network failures, and missing API keys
-- **Conversation history**: Tests proper formatting and inclusion of conversation context
-- **Response formatting**: Tests correct response structure and data parsing
-- **Edge cases**: Tests with missing messages, invalid responses, complex data structures
+- Chat API endpoint (`/api/chat` POST)
+- LLM integration with Groq API, JSON parsing (including code blocks)
+- Error handling, conversation history, and response formatting
 
 ## Running Tests
 
@@ -119,55 +91,35 @@ Tests use realistic data that mirrors real-world usage:
 
 ## Mocking Strategy
 
-- **Browser APIs**: Clipboard, location, and alert are mocked in component tests
-- **Next.js router**: Navigation functions are mocked where needed
-- **Fetch API**: Global fetch is mocked for chatbot API tests
-- **External APIs**: Groq API calls are mocked with realistic responses
-- **Next.js server components**: NextRequest and NextResponse are mocked for API route tests
-- **URL-based sharing**: The application uses URL-based sharing (no database), but API mocking is used for chatbot functionality
+- Browser APIs (clipboard, location, alert) and Next.js router are mocked
+- Fetch API and Groq API calls are mocked with realistic responses
+- Next.js server components (NextRequest, NextResponse) are mocked for API route tests
 
 ## Testing Approach
 
 ### URL-Based Sharing
-The application uses URL-based sharing with compressed data:
-- All calculation data is encoded in URL parameters
-- No database required for sharing
-- Data is compressed using Base64 encoding and custom compression strategies
-- Tests verify compression reduces URL length while maintaining data integrity
+URL-based sharing with compressed data (Base64 + custom compression). Tests verify compression reduces URL length while maintaining data integrity.
 
 ### Chatbot Testing
-The chatbot feature is thoroughly tested:
-- **API integration**: Tests mock the Groq API to verify proper request formatting
-- **Data extraction**: Tests verify structured data is correctly extracted from natural language
-- **Autofill functionality**: Tests verify extracted data correctly populates forms
-- **Error messaging**: Tests verify user guidance when the API is unavailable
-- **Error scenarios**: Tests cover network errors, API failures, and invalid responses
-- **Conversation flow**: Tests verify proper handling of multi-turn conversations
+Tests cover API integration, data extraction, autofill functionality, error handling, and multi-turn conversation flow.
 
 ### Test Isolation
-- Each test is independent and doesn't affect others
-- Tests use isolated data structures
-- No shared state between tests
+- Each test is independent with isolated data structures and no shared state
 
 ### Error Coverage
-- Tests cover both success and failure scenarios
-- Invalid data handling is tested
-- Edge cases (empty data, single roommate, zero values) are covered
+- Both success and failure scenarios, including invalid data handling and edge cases (empty data, single roommate, zero values)
 
 ## Best Practices
 
-1. **Isolation**: Each test is independent and doesn't affect others
-2. **Realistic data**: Tests use data that reflects real usage patterns
-3. **Error coverage**: Tests cover both success and failure scenarios
-4. **Performance**: Tests run quickly and don't require external services
-5. **Maintainability**: Tests are well-documented and easy to understand
-6. **Coverage**: Aim for high coverage of critical business logic (calculations, compression)
+1. **Isolation** - Independent tests with no shared state
+2. **Realistic data** - Tests reflect real-world usage patterns
+3. **Error coverage** - Success and failure scenarios tested
+4. **Performance** - Fast tests without external service dependencies
+5. **Maintainability** - Well-documented and understandable
+6. **Coverage** - High coverage target for critical business logic (calculations, compression)
 
 ## Notes
 
-- **URL-based sharing**: The application does not use API endpoints for sharing - all sharing is URL-based
-- **No database**: No database is required for sharing - all data is stored in URL parameters
-- **Chatbot API**: The chatbot feature uses the `/api/chat` endpoint which communicates with Groq API
-- **Client-side logic**: Tests focus on client-side logic, URL-based sharing workflows, and chatbot functionality
-- **Component tests**: Component tests verify UI functionality without requiring full rendering (where possible)
-- **API mocking**: All external API calls (Groq) are mocked in tests for reliability and speed
+- URL-based sharing: No database required, all data encoded in URL parameters
+- Chatbot API: Uses `/api/chat` endpoint communicating with Groq API
+- All external API calls are mocked in tests for reliability and speed
