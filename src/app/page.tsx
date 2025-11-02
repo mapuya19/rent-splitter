@@ -120,38 +120,68 @@ export default function Home() {
       console.warn('Cannot add/update roommate: name is required');
       return;
     }
-    
-    // Normalize name for comparison (trim, lowercase)
-    const normalizedName = name.trim().toLowerCase();
-    
-    // Check if roommate with same name already exists
-    const existingIndex = roommates.findIndex(
+
+    const trimmedName = name.trim();
+    const normalizedName = trimmedName.toLowerCase();
+    const hasValidIncome = income > 0;
+    const hasValidRoomSize = roomSize !== undefined && roomSize > 0;
+
+    const existingRoommate = roommates.find(
       r => r.name.trim().toLowerCase() === normalizedName
     );
-    
-    if (existingIndex >= 0) {
-      // Update existing roommate - only update if name is properly associated
-      const updatedRoommates = [...roommates];
-      updatedRoommates[existingIndex] = {
-        ...updatedRoommates[existingIndex],
-        income: income > 0 ? income : updatedRoommates[existingIndex].income,
-        roomSize: roomSize !== undefined && roomSize > 0 ? roomSize : updatedRoommates[existingIndex].roomSize,
-      };
-      setRoommates(updatedRoommates);
-    } else {
-      // Add new roommate - ensure we have valid data
-      if ((income <= 0 && !useRoomSizeSplit) || (roomSize === undefined && useRoomSizeSplit)) {
-        console.warn(`Cannot add roommate ${name}: missing required field (${useRoomSizeSplit ? 'roomSize' : 'income'})`);
-        return;
+
+    setRoommates((prevRoommates) => {
+      const index = prevRoommates.findIndex(
+        (r) => r.name.trim().toLowerCase() === normalizedName
+      );
+
+      if (index >= 0) {
+        if (!hasValidIncome && !hasValidRoomSize) {
+          // Nothing new to update; keep existing state
+          return prevRoommates;
+        }
+
+        const updatedRoommates = [...prevRoommates];
+        const target = updatedRoommates[index];
+        const updatedRoommate: Roommate = {
+          ...target,
+          income: hasValidIncome ? income : target.income,
+          roomSize: hasValidRoomSize ? roomSize : target.roomSize,
+        };
+
+        // Avoid unnecessary state updates if nothing changed
+        if (
+          updatedRoommate.income === target.income &&
+          updatedRoommate.roomSize === target.roomSize
+        ) {
+          return prevRoommates;
+        }
+
+        updatedRoommates[index] = updatedRoommate;
+        return updatedRoommates;
       }
-      
+
       const roommate: Roommate = {
         id: Math.random().toString(36).substring(2, 15),
-        name: name.trim(),
-        income: income > 0 ? income : 0,
-        roomSize: roomSize && roomSize > 0 ? roomSize : undefined,
+        name: trimmedName,
+        income: hasValidIncome ? income : 0,
+        roomSize: hasValidRoomSize ? roomSize : undefined,
       };
-      setRoommates([...roommates, roommate]);
+
+      return [...prevRoommates, roommate];
+    });
+
+    if (!existingRoommate) {
+      if (!useRoomSizeSplit && !hasValidIncome) {
+        console.warn(
+          `Adding roommate ${trimmedName}: income missing or zero. They will be excluded from income-based splits until updated.`
+        );
+      }
+      if (useRoomSizeSplit && !hasValidRoomSize) {
+        console.warn(
+          `Adding roommate ${trimmedName}: room size missing or zero. They will be excluded from room-size splits until updated.`
+        );
+      }
     }
   };
 
@@ -169,30 +199,37 @@ export default function Home() {
     }
     
     // Normalize name for comparison (trim, lowercase)
-    const normalizedName = name.trim().toLowerCase();
-    
-    // Check if expense with same name already exists
-    const existingIndex = customExpenses.findIndex(
-      e => e.name.trim().toLowerCase() === normalizedName
-    );
-    
-    if (existingIndex >= 0) {
-      // Update existing expense - name must be properly associated
-      const updatedExpenses = [...customExpenses];
-      updatedExpenses[existingIndex] = {
-        ...updatedExpenses[existingIndex],
-        amount,
-      };
-      setCustomExpenses(updatedExpenses);
-    } else {
-      // Add new expense
+    const trimmedName = name.trim();
+    const normalizedName = trimmedName.toLowerCase();
+
+    setCustomExpenses((prevExpenses) => {
+      const index = prevExpenses.findIndex(
+        (e) => e.name.trim().toLowerCase() === normalizedName
+      );
+
+      if (index >= 0) {
+        const existingExpense = prevExpenses[index];
+
+        if (existingExpense.amount === amount) {
+          return prevExpenses;
+        }
+
+        const updatedExpenses = [...prevExpenses];
+        updatedExpenses[index] = {
+          ...existingExpense,
+          amount,
+        };
+        return updatedExpenses;
+      }
+
       const expense: CustomExpense = {
         id: Math.random().toString(36).substring(2, 15),
-        name: name.trim(),
+        name: trimmedName,
         amount,
       };
-      setCustomExpenses([...customExpenses, expense]);
-    }
+
+      return [...prevExpenses, expense];
+    });
   };
 
   return (
@@ -332,7 +369,7 @@ export default function Home() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">How it works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-start">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <DollarSign className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-3">
@@ -344,7 +381,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-start">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <Users className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-3">
@@ -356,7 +393,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-start">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <Calculator className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-3">

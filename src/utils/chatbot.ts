@@ -264,6 +264,9 @@ export async function processChatbotMessage(
           if (rm.roomSize) {
             foundItems.push(`Roommate: ${rm.name} (room size: ${rm.roomSize} sq ft)`);
           }
+          if (!rm.income && !rm.roomSize) {
+            foundItems.push(`Roommate: ${rm.name} (needs income or room size)`);
+          }
         });
       }
       if (parsedData.customExpenses && parsedData.customExpenses.length > 0) {
@@ -275,18 +278,22 @@ export async function processChatbotMessage(
       // Only show confirmation if we found data
       if (foundItems.length > 0) {
         autofill = () => {
+          // Set split method FIRST if specified
+          if (parsedData.useRoomSizeSplit !== undefined) {
+            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
+          }
+          
           // Fill in order: rent first, then utilities, then roommates
           if (parsedData.totalRent) callbacks.onSetTotalRent(parsedData.totalRent);
           if (parsedData.utilities) callbacks.onSetUtilities(parsedData.utilities);
           
-          // Validate and add roommates - ensure names are present
+          // Add roommates - handleAddRoommate now allows incomplete roommates
           if (parsedData.roommates) {
             parsedData.roommates.forEach(rm => {
-              // CRITICAL: Ensure name is present before adding/updating
+              // Ensure name is present before adding/updating
               if (rm.name && rm.name.trim()) {
+                // handleAddRoommate will handle updates vs new roommates and allow incomplete data
                 callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
-              } else {
-                console.warn('Skipping roommate: name is missing or empty');
               }
             });
           }
@@ -297,16 +304,12 @@ export async function processChatbotMessage(
               // CRITICAL: Ensure name and valid amount are present
               if (exp.name && exp.name.trim() && exp.amount > 0) {
                 callbacks.onAddCustomExpense(exp.name, exp.amount);
-              } else {
-                console.warn(`Skipping expense: name or amount is invalid (name: ${exp.name}, amount: ${exp.amount})`);
               }
+              // Silently skip invalid expenses - don't spam console
             });
           }
           
           if (parsedData.currency) callbacks.onSetCurrency(parsedData.currency);
-          if (parsedData.useRoomSizeSplit !== undefined) {
-            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
-          }
         };
       }
     }
@@ -424,6 +427,9 @@ function processChatbotMessageRules(
         if (rm.roomSize) {
           foundItems.push(`Roommate: ${rm.name} (room size: ${rm.roomSize} sq ft)`);
         }
+        if (!rm.income && !rm.roomSize) {
+          foundItems.push(`Roommate: ${rm.name} (needs income or room size)`);
+        }
       });
     }
 
@@ -455,19 +461,27 @@ function processChatbotMessageRules(
           `Would you like me to fill this in? (Say "yes" or "fill it in" to confirm)`,
         parsedData,
         autofill: () => {
+          // Set split method FIRST if specified
+          if (parsedData.useRoomSizeSplit !== undefined) {
+            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
+          }
+          
           // Fill in order: rent first, then utilities, then roommates
           if (parsedData.totalRent) callbacks.onSetTotalRent(parsedData.totalRent);
           if (parsedData.utilities) callbacks.onSetUtilities(parsedData.utilities);
           
-          // Validate and add roommates - ensure names are present
+          // Validate and add roommates - ensure names are present and required fields are valid
           if (parsedData.roommates) {
             parsedData.roommates.forEach(rm => {
               // CRITICAL: Ensure name is present before adding/updating
-              if (rm.name && rm.name.trim()) {
-                callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
-              } else {
-                console.warn('Skipping roommate: name is missing or empty');
+              if (!rm.name || !rm.name.trim()) {
+                // Silently skip - invalid data, don't spam console
+                return;
               }
+              
+              // For rules-based fallback, we don't have currentState, so try to add anyway
+              // handleAddRoommate will validate and handle appropriately
+              callbacks.onAddRoommate(rm.name, rm.income || 0, rm.roomSize);
             });
           }
           
@@ -477,16 +491,12 @@ function processChatbotMessageRules(
               // CRITICAL: Ensure name and valid amount are present
               if (exp.name && exp.name.trim() && exp.amount > 0) {
                 callbacks.onAddCustomExpense(exp.name, exp.amount);
-              } else {
-                console.warn(`Skipping expense: name or amount is invalid (name: ${exp.name}, amount: ${exp.amount})`);
               }
+              // Silently skip invalid expenses - don't spam console
             });
           }
           
           if (parsedData.currency) callbacks.onSetCurrency(parsedData.currency);
-          if (parsedData.useRoomSizeSplit !== undefined) {
-            callbacks.onSetSplitMethod(parsedData.useRoomSizeSplit);
-          }
         },
       };
     } else {
