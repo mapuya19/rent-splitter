@@ -34,16 +34,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## SEO Optimization
 
-This project is optimized for search engines with:
-
-- ✅ Comprehensive metadata (Open Graph, Twitter Cards)
-- ✅ JSON-LD structured data (Schema.org)
-- ✅ Sitemap.xml generation
-- ✅ Robots.txt configuration
-- ✅ Semantic HTML structure
-- ✅ Fully mobile-responsive design with optimized chatbot interface
-- ✅ Smooth animations and transitions for better UX
-- ✅ Fast page load times
+Includes comprehensive metadata (Open Graph, Twitter Cards), JSON-LD structured data, sitemap generation, robots.txt, semantic HTML, and mobile-responsive design.
 
 See `DEPLOYMENT.md` for deployment instructions.
 
@@ -72,49 +63,27 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Chatbot Feature
 
-The application includes an AI-powered chatbot assistant that helps users:
+AI-powered assistant powered by Groq's Llama 3.1 8B Instant model that helps users:
+- Fill out forms automatically from natural language input
+- Answer questions about features and split methods
+- Update existing data and rename roommates/expenses
+- Auto-execute form updates (with confirmation for questions)
 
-- **Fill out forms automatically** - Tell the chatbot your rent, utilities, and roommate info in natural language
-- **Answer questions** - Learn about features, split methods, and how the app works
-- **Smart extraction** - The AI extracts structured data from conversational input (rent amounts, incomes, room sizes, etc.)
-- **Mobile-optimized** - Fully responsive chatbot interface that adapts to mobile screen sizes
-- **Smooth animations** - Polished UI with fade-in, slide, and scale animations for better user experience
-
-The chatbot uses Llama 3.1 8B Instant model via Groq API. If the service is unavailable, users are prompted to try again or contact support.
+Features include smart data extraction, mobile-optimized interface, and context-aware updates.
 
 ## Environment Variables
 
 ### Required
 
-- `MODEL_API_KEY` - Your Groq API key for chatbot functionality (Llama 3.1 model)
-  - Get your API key from: https://console.groq.com/keys
-  - **IMPORTANT**: Never commit your API key to version control
-  - For local development: Create a `.env.local` file (see `.env.example` for template)
-  - For Vercel deployment: Set it in your Vercel project settings under Environment Variables
+- `MODEL_API_KEY` - Groq API key for chatbot functionality  
+  Get your key from [console.groq.com/keys](https://console.groq.com/keys)
 
 ### Optional
 
-- `NEXT_PUBLIC_APP_URL` - Your app's public URL (defaults to `https://rent-splitted.vercel.app`)
-- `NEXT_PUBLIC_GOOGLE_VERIFICATION` - Google Search Console verification code (optional)
+- `NEXT_PUBLIC_APP_URL` - Public app URL (defaults to `https://rent-splitted.vercel.app`)
+- `NEXT_PUBLIC_GOOGLE_VERIFICATION` - Google Search Console verification code
 
-### Setup Instructions
-
-1. **Local Development**:
-   ```bash
-   # Copy the example environment file
-   cp .env.example .env.local
-   
-   # Edit .env.local and add your API key
-   # MODEL_API_KEY=your-actual-api-key-here
-   ```
-
-2. **Vercel Deployment**:
-   - Go to your Vercel project settings
-   - Navigate to "Environment Variables"
-   - Add `MODEL_API_KEY` with your Groq API key
-   - Redeploy your application
-
-**Note**: The `.env.local` file is gitignored and will not be committed. Use `.env.example` as a template for the required variables.
+**Setup**: Create `.env.local` for local development or add variables in Vercel project settings for deployment. Never commit API keys to version control.
 
 ## License
 

@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { processChatbotMessage, isConfirmation } from '@/utils/chatbot';
+import { clsx } from 'clsx';
 
 // Simple markdown renderer for bot messages
 function MessageContent({ content }: { content: string }) {
@@ -105,7 +105,9 @@ export function Chatbot({
   const [pendingAutofill, setPendingAutofill] = useState<(() => void) | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const lastEnterPressRef = useRef<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Load saved preference from localStorage
   useEffect(() => {
@@ -113,6 +115,20 @@ export function Chatbot({
     if (savedPreference === 'true') {
       setIsOpen(false);
     }
+  }, []);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      // Check for touch capability and screen size
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth < 640;
+      setIsMobile(hasTouch && isSmallScreen);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Scroll to bottom when messages change
@@ -237,10 +253,31 @@ export function Chatbot({
     }, 150);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      if (isMobile) {
+        // Mobile: Double Enter to send
+        const now = Date.now();
+        if (lastEnterPressRef.current && now - lastEnterPressRef.current < 500) {
+          // Second Enter within 500ms - send message
+          e.preventDefault();
+          lastEnterPressRef.current = null;
+          handleSend();
+        } else {
+          // First Enter or Enter after timeout - allow newline
+          lastEnterPressRef.current = now;
+        }
+      } else {
+        // Desktop: Shift+Enter for newline, Enter alone sends
+        if (!e.shiftKey) {
+          e.preventDefault();
+          handleSend();
+        }
+        // If Shift+Enter, allow default behavior (newline)
+      }
+    } else {
+      // Reset Enter tracking if any other key is pressed
+      lastEnterPressRef.current = null;
     }
   };
 
@@ -392,7 +429,7 @@ export function Chatbot({
                 }}
               >
                 {message.role === 'bot' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center transition-all duration-200 hover:scale-110">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center transition-all duration-200 hover:scale-110">
                     <Bot className="h-4 w-4 text-blue-600" />
                   </div>
                 )}
@@ -406,7 +443,7 @@ export function Chatbot({
                   <MessageContent content={message.content} />
                 </div>
                 {message.role === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-110">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-110">
                     <User className="h-4 w-4 text-gray-600" />
                   </div>
                 )}
@@ -417,7 +454,7 @@ export function Chatbot({
                 className="flex gap-3 justify-start transition-all duration-300"
                 style={{ animation: 'fadeInUp 0.3s ease-out both' }}
               >
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
                   <Bot className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="bg-gray-100 rounded-lg px-4 py-2">
@@ -434,24 +471,36 @@ export function Chatbot({
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200">
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-end">
               <div className="flex-1 min-w-0">
                 <div className="w-full">
-                  <Input
+                  <textarea
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder="Type your message..."
                     aria-label="Chat input"
-                    label=""
+                    rows={1}
+                    className={clsx(
+                      'flex w-full min-h-[40px] max-h-[120px] rounded-md border border-gray-300 bg-white px-3 py-2 text-base ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-y-auto',
+                      'leading-normal'
+                    )}
+                    style={{
+                      height: 'auto',
+                    }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+                    }}
                   />
                 </div>
               </div>
               <Button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || sendingMessage}
-                className={`bg-blue-600 hover:bg-blue-700 active:bg-blue-800 flex-shrink-0 transition-all duration-200 min-w-[44px] min-h-[44px] touch-manipulation ${
+                className={`bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shrink-0 transition-all duration-200 min-w-[44px] min-h-[44px] touch-manipulation ${
                   sendingMessage 
                     ? 'animate-pulse scale-95' 
                     : 'hover:scale-110 active:scale-95'

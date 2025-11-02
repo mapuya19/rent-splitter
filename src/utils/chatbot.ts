@@ -161,6 +161,15 @@ export async function processChatbotMessage(
       if (parsedData.utilities) {
         foundItems.push(`Utilities: $${parsedData.utilities.toLocaleString()}`);
       }
+      if (parsedData.currency) {
+        const currentCurrency = currentState?.currency || 'USD';
+        const newCurrency = parsedData.currency;
+        if (currentCurrency !== newCurrency) {
+          foundItems.push(`Change currency: ${currentCurrency} → ${newCurrency}`);
+        } else {
+          foundItems.push(`Currency: ${newCurrency}`);
+        }
+      }
       if (parsedData.roommates && parsedData.roommates.length > 0) {
         parsedData.roommates.forEach(rm => {
           if (!rm.name || !rm.name.trim()) {
