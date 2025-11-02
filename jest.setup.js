@@ -19,13 +19,11 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock window.location
-Object.defineProperty(window, 'location', {
-  value: {
-    origin: 'http://localhost:3000',
-    search: '',
-  },
-  writable: true,
-})
+delete window.location;
+window.location = {
+  origin: 'http://localhost:3000',
+  search: '',
+}
 
 // Mock clipboard API
 Object.assign(navigator, {

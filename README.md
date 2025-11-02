@@ -80,7 +80,7 @@ The application includes an AI-powered chatbot assistant that helps users:
 - **Mobile-optimized** - Fully responsive chatbot interface that adapts to mobile screen sizes
 - **Smooth animations** - Polished UI with fade-in, slide, and scale animations for better user experience
 
-The chatbot uses Llama 3.1 8B Instant model via Groq API with a rules-based fallback for reliability.
+The chatbot uses Llama 3.1 8B Instant model via Groq API. If the service is unavailable, users are prompted to try again or contact support.
 
 ## Environment Variables
 

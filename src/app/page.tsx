@@ -232,6 +232,30 @@ export default function Home() {
     });
   };
 
+  const handleRemoveRoommate = (name: string) => {
+    if (!name || !name.trim()) {
+      console.warn('Cannot remove roommate: name is required');
+      return;
+    }
+
+    const normalizedName = name.trim().toLowerCase();
+    setRoommates((prevRoommates) =>
+      prevRoommates.filter((r) => r.name.trim().toLowerCase() !== normalizedName)
+    );
+  };
+
+  const handleRemoveCustomExpense = (name: string) => {
+    if (!name || !name.trim()) {
+      console.warn('Cannot remove expense: name is required');
+      return;
+    }
+
+    const normalizedName = name.trim().toLowerCase();
+    setCustomExpenses((prevExpenses) =>
+      prevExpenses.filter((e) => e.name.trim().toLowerCase() !== normalizedName)
+    );
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -413,6 +437,8 @@ export default function Home() {
         onSetUtilities={setUtilities}
         onAddRoommate={handleAddRoommate}
         onAddCustomExpense={handleAddCustomExpense}
+        onRemoveRoommate={handleRemoveRoommate}
+        onRemoveCustomExpense={handleRemoveCustomExpense}
         onSetCurrency={setSelectedCurrency}
         onSetSplitMethod={setUseRoomSizeSplit}
         currentState={{

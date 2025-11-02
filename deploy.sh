@@ -38,7 +38,7 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "✨ Features included:"
     echo "   - Square footage-based rent splitting"
-    echo "   - Income-based rent splitting (fallback)"
+    echo "   - Income-based rent splitting"
     echo "   - Even utilities and expenses splitting"
     echo "   - Shareable links with localStorage"
     echo "   - Responsive design"

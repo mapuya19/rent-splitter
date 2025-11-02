@@ -35,7 +35,7 @@ The shareable links work automatically in production using URL-based sharing:
 
 ### Features Included
 - ✅ Square footage-based rent splitting
-- ✅ Income-based rent splitting (fallback)
+- ✅ Income-based rent splitting
 - ✅ Even utilities and expenses splitting
 - ✅ URL-based shareable links (no database needed)
 - ✅ Complete data sharing (currency, split method, all calculations)
