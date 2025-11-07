@@ -15,6 +15,19 @@ interface ChatMessage {
 export async function POST(request: NextRequest) {
   try {
     const { message, conversationHistory, currentState } = await request.json();
+    
+    // Optimize conversation history: limit to last 10 messages (5 turns) to reduce token usage
+    // Since currentState already contains all form data, we only need recent context for pronouns/references
+    const MAX_HISTORY_MESSAGES = 10;
+    const optimizedHistory = conversationHistory 
+      ? conversationHistory.slice(-MAX_HISTORY_MESSAGES)
+      : [];
+    
+    // Log payload and current state to terminal (server-side only)
+    console.log('=== Chat API Request ===');
+    console.log('Payload:', JSON.stringify({ message, conversationHistory, currentState }, null, 2));
+    console.log(`Token optimization: ${conversationHistory?.length || 0} messages → ${optimizedHistory.length} messages`);
+    console.log('=======================');
 
     const systemPrompt = `You help with a rent-splitting calculator. Reply with ONE JSON object only (no markdown, no prose before/after) using this shape:
 {
@@ -77,7 +90,7 @@ Key rules:
 
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt + stateContext },
-      ...(conversationHistory || []),
+      ...optimizedHistory,
       { role: 'user', content: message },
     ];
 
