@@ -88,7 +88,10 @@ export async function processChatbotMessage(
           continue;
         } else {
           // Max retries reached
-          throw new Error(`Rate limit exceeded. Please try again in ${retryAfter} seconds.`);
+          const errorMessage = typeof errorDetails === 'object' && errorDetails !== null && 'message' in errorDetails
+            ? (errorDetails as { message?: string }).message || `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
+            : `Rate limit exceeded. Please try again in ${retryAfter} seconds.`;
+          throw new Error(errorMessage);
         }
       }
 
@@ -107,12 +110,24 @@ export async function processChatbotMessage(
           body: errorDetails,
         });
 
-        const errorMessage =
-          typeof errorDetails === 'object' && errorDetails !== null && 'error' in errorDetails
-            ? (errorDetails as { error?: string }).error || 'API request failed'
-            : typeof errorDetails === 'string'
-              ? errorDetails
-              : 'API request failed';
+        // Extract user-friendly error message
+        let errorMessage = 'API request failed';
+        if (typeof errorDetails === 'object' && errorDetails !== null) {
+          if ('message' in errorDetails && typeof errorDetails.message === 'string') {
+            errorMessage = errorDetails.message;
+          } else if ('error' in errorDetails) {
+            errorMessage = typeof errorDetails.error === 'string' 
+              ? errorDetails.error 
+              : 'Invalid request';
+          }
+        } else if (typeof errorDetails === 'string') {
+          errorMessage = errorDetails;
+        }
+
+        // For 400 errors, use the message from the API
+        if (response.status === 400) {
+          throw new Error(errorMessage);
+        }
 
         throw new Error(errorMessage);
       }

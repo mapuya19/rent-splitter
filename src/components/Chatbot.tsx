@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { processChatbotMessage, isConfirmation } from '@/utils/chatbot';
+import { sanitizeInput, validateMessageLength, detectPromptInjection } from '@/utils/security';
 import { clsx } from 'clsx';
 
 // Simple markdown renderer for bot messages
@@ -146,7 +147,38 @@ export function Chatbot({
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
-    const userMessageText = inputValue.trim();
+    // Client-side validation and sanitization
+    const rawMessage = inputValue.trim();
+    const sanitizedMessage = sanitizeInput(rawMessage);
+    
+    // Validate message length
+    const lengthCheck = validateMessageLength(sanitizedMessage);
+    if (!lengthCheck.valid) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'bot',
+        content: lengthCheck.error || 'Your message is too long. Please shorten it and try again.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    // Check for prompt injection (client-side warning only, server will block)
+    const injectionCheck = detectPromptInjection(sanitizedMessage);
+    if (injectionCheck.isInjection && injectionCheck.confidence === 'high') {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'bot',
+        content: 'I cannot process that type of message. Please rephrase your question or request.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      setInputValue('');
+      return;
+    }
+
+    const userMessageText = sanitizedMessage;
     setSendingMessage(true);
     setInputValue('');
     
@@ -241,10 +273,21 @@ export function Chatbot({
         }
       } catch (error) {
         console.error('Error processing message:', error);
+        let errorContent = 'Sorry, I encountered an error. Please try again or rephrase your message.';
+        
+        // Handle specific error types
+        if (error instanceof Error) {
+          if (error.message.includes('Rate limit')) {
+            errorContent = 'Too many requests. Please wait a moment and try again.';
+          } else if (error.message.includes('Invalid request')) {
+            errorContent = 'Your message could not be processed. Please rephrase and try again.';
+          }
+        }
+        
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'bot',
-          content: 'Sorry, I encountered an error. Please try again or rephrase your message.',
+          content: errorContent,
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMessage]);
