@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useGSAP } from '@gsap/react';
+import { gsap } from 'gsap';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { processChatbotMessage, isConfirmation } from '@/utils/chatbot';
 import { sanitizeInput, validateMessageLength, detectPromptInjection } from '@/utils/security';
 import { clsx } from 'clsx';
+import { animations } from '@/lib/animations';
+import { Power2, Back } from 'gsap';
 
 // Simple markdown renderer for bot messages
 function MessageContent({ content }: { content: string }) {
@@ -109,6 +113,54 @@ export function Chatbot({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastEnterPressRef = useRef<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // GSAP: FAB bounce animation - more dramatic
+  useGSAP(() => {
+    if (fabRef.current && !isOpen) {
+      animations.gentleBounce(fabRef.current, -1);
+      return () => gsap.killTweensOf(fabRef.current);
+    }
+  }, { scope: fabRef, dependencies: [isOpen] });
+
+  // GSAP: Modal spring animation
+  useGSAP(() => {
+    if (modalRef.current) {
+      animations.modalSpring(modalRef.current, isOpen);
+    }
+  }, { scope: modalRef, dependencies: [isOpen] });
+
+  // GSAP: Message entrance animations - more dramatic
+  useGSAP(() => {
+    if (messagesContainerRef.current) {
+      const messageElements = messagesContainerRef.current.querySelectorAll('[data-message]');
+      gsap.fromTo(
+        Array.from(messageElements),
+        { opacity: 0, y: 40, scale: 0.8, rotationX: -10 },
+        { 
+          opacity: 1, 
+          y: 0, 
+          scale: 1, 
+          rotationX: 0,
+          duration: 0.5,
+          stagger: 0.08,
+          ease: Back.easeOut.config(2)
+        }
+      );
+    }
+  }, { scope: messagesContainerRef, dependencies: [messages, isTyping] });
+
+  // GSAP: Typing indicator bounce
+  useGSAP(() => {
+    if (isTyping && messagesContainerRef.current) {
+      const dots = messagesContainerRef.current.querySelectorAll('[data-message] .w-2');
+      if (dots.length > 0) {
+        return animations.typingBounce(Array.from(dots));
+      }
+    }
+  }, { scope: messagesContainerRef, dependencies: [isTyping] });
 
   // Load saved preference from localStorage
   useEffect(() => {
@@ -337,12 +389,27 @@ export function Chatbot({
   };
 
   const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-      localStorage.setItem('chatbot-closed', 'false');
-    }, 200); // Match animation duration
+    if (modalRef.current) {
+      gsap.to(modalRef.current, {
+        y: 100,
+        opacity: 0,
+        scale: 0.9,
+        duration: 0.2,
+        ease: Power2.easeIn,
+        onComplete: () => {
+          setIsOpen(false);
+          setIsClosing(false);
+          localStorage.setItem('chatbot-closed', 'false');
+        }
+      });
+    } else {
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsClosing(false);
+        localStorage.setItem('chatbot-closed', 'false');
+      }, 200);
+    }
   };
 
   const handleOpen = () => {
@@ -356,14 +423,10 @@ export function Chatbot({
       {/* Floating Button */}
       {!isOpen && (
         <button
+          ref={fabRef}
           onClick={handleOpen}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-14 w-14 min-w-[56px] min-h-[56px] rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 animate-bounce touch-manipulation select-none"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-14 w-14 min-w-[56px] min-h-[56px] rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 touch-manipulation select-none"
           aria-label="Open chatbot"
-          style={{ 
-            animationDuration: '2s', 
-            animationIterationCount: 'infinite',
-            touchAction: 'manipulation'
-          }}
         >
           <MessageCircle className="h-6 w-6 mx-auto" />
         </button>
@@ -383,10 +446,9 @@ export function Chatbot({
           
           {/* Modal */}
           <div
-            className={`fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 w-auto sm:w-full sm:max-w-md h-[600px] max-h-[85vh] flex flex-col bg-white rounded-lg shadow-2xl border border-gray-200/50 transition-all duration-300 transform ${
-              isClosing
-                ? 'translate-y-4 opacity-0 scale-95'
-                : 'translate-y-0 opacity-100 scale-100'
+            ref={modalRef}
+            className={`fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 w-auto sm:w-full sm:max-w-md h-[600px] max-h-[85vh] flex flex-col bg-white rounded-lg shadow-2xl border border-gray-200/50 ${
+              isOpen ? '' : 'hidden'
             }`}
             style={{
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05)',
@@ -455,29 +517,28 @@ export function Chatbot({
 
           {/* Messages */}
           <div 
+            ref={messagesContainerRef}
             className="flex-1 overflow-y-auto p-4 space-y-4 touch-pan-y overscroll-contain select-text" 
             style={{ 
               WebkitOverflowScrolling: 'touch',
               touchAction: 'pan-y pinch-zoom',
             }}
           >
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 transition-all duration-300 ${
+                data-message
+                className={`flex gap-3 ${
                   message.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
-                style={{ 
-                  animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`
-                }}
               >
                 {message.role === 'bot' && (
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center transition-all duration-200 hover:scale-110">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                     <Bot className="h-4 w-4 text-blue-600" />
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 transition-all duration-200 ${
+                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     message.role === 'user'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
@@ -486,25 +547,22 @@ export function Chatbot({
                   <MessageContent content={message.content} />
                 </div>
                 {message.role === 'user' && (
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-110">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                     <User className="h-4 w-4 text-gray-600" />
                   </div>
                 )}
               </div>
             ))}
             {isTyping && (
-              <div 
-                className="flex gap-3 justify-start transition-all duration-300"
-                style={{ animation: 'fadeInUp 0.3s ease-out both' }}
-              >
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+              <div data-message>
+                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                   <Bot className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="bg-gray-100 rounded-lg px-4 py-2">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
                   </div>
                 </div>
               </div>

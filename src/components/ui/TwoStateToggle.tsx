@@ -15,7 +15,7 @@ const TwoStateToggle = forwardRef<HTMLDivElement, TwoStateToggleProps>(
       <div
         ref={ref}
         className={clsx(
-          'relative inline-flex h-10 w-48 rounded-lg border border-gray-300 bg-white p-1',
+          'relative inline-flex h-10 w-48 rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 p-1',
           className
         )}
       >
@@ -33,7 +33,7 @@ const TwoStateToggle = forwardRef<HTMLDivElement, TwoStateToggleProps>(
           type="button"
           className={clsx(
             'relative z-10 flex w-1/2 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap text-center',
-            !value ? 'text-white' : 'text-gray-700 hover:text-gray-900'
+            !value ? 'text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
           )}
           onClick={() => onChange(false)}
         >
@@ -45,7 +45,7 @@ const TwoStateToggle = forwardRef<HTMLDivElement, TwoStateToggleProps>(
           type="button"
           className={clsx(
             'relative z-10 flex w-1/2 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap text-center',
-            value ? 'text-white' : 'text-gray-700 hover:text-gray-900'
+            value ? 'text-white' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
           )}
           onClick={() => onChange(true)}
         >

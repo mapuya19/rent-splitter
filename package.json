@@ -12,7 +12,9 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "clsx": "^2.1.1",
+    "gsap": "^3.14.2",
     "lucide-react": "^0.546.0",
     "next": "15.5.7",
     "react": "19.1.0",

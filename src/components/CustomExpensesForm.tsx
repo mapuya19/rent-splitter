@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useGSAP } from '@gsap/react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { NumberInput } from '@/components/ui/NumberInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { CustomExpense } from '@/types';
+import { animations } from '@/lib/animations';
 
 interface CustomExpensesFormProps {
   customExpenses: CustomExpense[];
@@ -15,6 +17,15 @@ interface CustomExpensesFormProps {
 
 export function CustomExpensesForm({ customExpenses, onCustomExpensesChange }: CustomExpensesFormProps) {
   const [newExpense, setNewExpense] = useState({ name: '', amount: '' });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // GSAP: Staggered entrance for expenses - more dramatic
+  useGSAP(() => {
+    if (containerRef.current) {
+      const expenseCards = containerRef.current.querySelectorAll('[data-expense]');
+      animations.slideInLeft(Array.from(expenseCards), 0.5);
+    }
+  }, { scope: containerRef, dependencies: [customExpenses.length] });
 
   const addExpense = () => {
     if (newExpense.name.trim() && newExpense.amount) {
@@ -49,9 +60,9 @@ export function CustomExpensesForm({ customExpenses, onCustomExpensesChange }: C
         <CardTitle>Additional Monthly Expenses</CardTitle>
         <p className="text-sm text-gray-600">These will be split evenly between all roommates</p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4" ref={containerRef}>
         {customExpenses.map((expense) => (
-          <div key={expense.id} className="flex gap-2 items-end">
+          <div key={expense.id} data-expense className="flex gap-2 items-end">
             <div className="flex-1">
               <Input
                 label="Expense Name"

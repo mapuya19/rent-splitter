@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useGSAP } from '@gsap/react';
 import { RoommateForm } from '@/components/RoommateForm';
 import { RentForm } from '@/components/RentForm';
 import { CustomExpensesForm } from '@/components/CustomExpensesForm';
 import { ResultsDisplay } from '@/components/ResultsDisplay';
 import { CurrencySelector } from '@/components/CurrencySelector';
 import { TwoStateToggle } from '@/components/ui/TwoStateToggle';
+import { DarkModeToggle } from '@/components/ui/DarkModeToggle';
 import { Roommate, SplitResult, CalculationData, CustomExpense } from '@/types';
 import { calculateRentSplit } from '@/utils/calculations';
 import { compressCalculationData, decompressCalculationData } from '@/utils/compression';
 import { Calculator, Users, DollarSign } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { Chatbot } from '@/components/Chatbot';
+import { animations } from '@/lib/animations';
 
 export default function Home() {
   const [roommates, setRoommates] = useState<Roommate[]>([]);
@@ -22,6 +25,14 @@ export default function Home() {
   const [results, setResults] = useState<SplitResult[]>([]);
   const [useRoomSizeSplit, setUseRoomSizeSplit] = useState(true);
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const cards = mainRef.current?.querySelectorAll('[data-animate="card"]');
+    if (cards && cards.length > 0) {
+      animations.staggerIn(Array.from(cards), 0.2);
+    }
+  }, { scope: mainRef, dependencies: [] });
 
   // Calculate results whenever inputs change
   useEffect(() => {
@@ -257,41 +268,49 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-8">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-8">
+      <DarkModeToggle />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Calculator className="h-8 w-8 text-blue-600 mr-2" aria-hidden="true" />
-            <h1 className="text-3xl font-bold text-gray-900">Rent Splitter</h1>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 blur-xl opacity-50 rounded-full" />
+              <Calculator className="h-8 w-8 text-blue-600 mr-2 relative z-10" aria-hidden="true" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Rent Splitter</h1>
           </div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Split rent proportionally based on income or room size, and utilities evenly between roommates. 
             Generate shareable links to collaborate with your roommates.
           </p>
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
             💡 <strong>Annual Income:</strong> Enter your yearly salary before taxes. The app will calculate monthly amounts automatically.
           </div>
         </header>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" ref={mainRef}>
           {/* Input Section */}
           <div className="space-y-6">
-            <RentForm
-              totalRent={totalRent}
-              utilities={utilities}
-              onRentChange={setTotalRent}
-              onUtilitiesChange={setUtilities}
-            />
+            <div data-animate="card">
+              <RentForm
+                totalRent={totalRent}
+                utilities={utilities}
+                onRentChange={setTotalRent}
+                onUtilitiesChange={setUtilities}
+              />
+            </div>
             
-            <CustomExpensesForm
-              customExpenses={customExpenses}
-              onCustomExpensesChange={setCustomExpenses}
-            />
+            <div data-animate="card">
+              <CustomExpensesForm
+                customExpenses={customExpenses}
+                onCustomExpensesChange={setCustomExpenses}
+              />
+            </div>
             
             {/* Mobile-only controls */}
-            <div className="lg:hidden space-y-6">
+            <div className="lg:hidden space-y-6" data-animate="card">
               <CurrencySelector
                 selectedCurrency={selectedCurrency}
                 onCurrencyChange={setSelectedCurrency}
@@ -324,36 +343,40 @@ export default function Home() {
               </div>
             </div>
             
-            <RoommateForm
-              roommates={roommates}
-              onRoommatesChange={setRoommates}
-              useRoomSizeSplit={useRoomSizeSplit}
-            />
+            <div data-animate="card">
+              <RoommateForm
+                roommates={roommates}
+                onRoommatesChange={setRoommates}
+                useRoomSizeSplit={useRoomSizeSplit}
+              />
+            </div>
           </div>
 
           {/* Results Section */}
           <div className="space-y-6">
-            {results.length > 0 ? (
-              <ResultsDisplay
-                results={results}
-                useRoomSizeSplit={useRoomSizeSplit}
-                selectedCurrency={selectedCurrency}
-                onShare={handleShare}
-              />
-            ) : (
-              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Add roommates to get started
-                </h3>
-                <p className="text-gray-600">
-                  Enter rent amount, utilities, and roommate information to see the split calculation.
-                </p>
-              </div>
-            )}
+            <div data-animate="card">
+              {results.length > 0 ? (
+                <ResultsDisplay
+                  results={results}
+                  useRoomSizeSplit={useRoomSizeSplit}
+                  selectedCurrency={selectedCurrency}
+                  onShare={handleShare}
+                />
+              ) : (
+                <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Add roommates to get started
+                  </h3>
+                  <p className="text-gray-600">
+                    Enter rent amount, utilities, and roommate information to see the split calculation.
+                  </p>
+                </div>
+              )}
+            </div>
             
             {/* Desktop-only controls */}
-            <div className="hidden lg:block space-y-6">
+            <div className="hidden lg:block space-y-6" data-animate="card">
               <CurrencySelector
                 selectedCurrency={selectedCurrency}
                 onCurrencyChange={setSelectedCurrency}

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useGSAP } from '@gsap/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Toggle } from '@/components/ui/Toggle';
 import { NumberInput } from '@/components/ui/NumberInput';
 import { RoomAdjustments } from '@/types';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { animations } from '@/lib/animations';
 
 interface RoomAdjustmentsProps {
   adjustments: RoomAdjustments;
@@ -14,6 +16,14 @@ interface RoomAdjustmentsProps {
 
 export function RoomAdjustmentsComponent({ adjustments, onAdjustmentsChange }: RoomAdjustmentsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // GSAP: Smooth accordion animation
+  useGSAP(() => {
+    if (contentRef.current) {
+      animations.smoothHeight(contentRef.current, isExpanded);
+    }
+  }, { scope: contentRef, dependencies: [isExpanded] });
 
   const handleToggleChange = (field: keyof RoomAdjustments, value: boolean) => {
     onAdjustmentsChange({
@@ -45,7 +55,7 @@ export function RoomAdjustmentsComponent({ adjustments, onAdjustmentsChange }: R
         </div>
       </CardHeader>
       {isExpanded && (
-        <CardContent className="space-y-4">
+        <CardContent ref={contentRef} className="space-y-4" style={{ overflow: 'hidden' }}>
           {/* Private Bathroom */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">

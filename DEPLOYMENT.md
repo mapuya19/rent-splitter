@@ -1,47 +1,88 @@
-# Deployment Guide for Rent Splitter
+# Deployment Guide
 
-## Vercel Deployment (Free Tier)
+## Vercel (Recommended)
 
 ### Prerequisites
+
 - GitHub account
-- Vercel account (free at vercel.com)
+- Vercel account (free at [vercel.com](https://vercel.com))
+- Groq API key (get from [console.groq.com/keys](https://console.groq.com/keys))
 
-### Steps to Deploy
+### Steps
 
-1. **Push to GitHub**
+1. **Push code to GitHub**
    ```bash
    git add .
-   git commit -m "Initial commit"
+   git commit -m "Deploy to Vercel"
    git push origin main
    ```
 
-2. **Deploy to Vercel**
+2. **Deploy**
    - Go to [vercel.com](https://vercel.com)
    - Click "New Project"
    - Import your GitHub repository
-   - Vercel will auto-detect Next.js
+   - Vercel auto-detects Next.js configuration
    - Click "Deploy"
 
-3. **Environment Variables**
-   - In Vercel dashboard, go to Settings > Environment Variables
-   - **Required**: Add `MODEL_API_KEY` with your Groq API key (get from [console.groq.com/keys](https://console.groq.com/keys))
-   - **Optional**: Add `NEXT_PUBLIC_APP_URL` = `https://your-app-name.vercel.app`
+3. **Configure environment variables**
+   - Go to Settings → Environment Variables
+   - Add required variable:
+     ```
+     MODEL_API_KEY = sk-xxxxxxxxxxxxxxxxxxxxx
+     ```
+   - Add optional variables:
+     ```
+     NEXT_PUBLIC_APP_URL = https://your-app.vercel.app
+     NEXT_PUBLIC_GOOGLE_VERIFICATION = verification_code
+     ```
 
-### Shareable Links
-URL-based sharing with compressed data encoding:
-- No database required (all data in URL)
-- Includes currency, split method, and all calculation data
+4. **Custom domain (optional)**
+   - Settings → Domains
+   - Add your domain
+   - Update `NEXT_PUBLIC_APP_URL`
 
-### Features Included
-- ✅ Square footage-based rent splitting
-- ✅ Income-based rent splitting
-- ✅ Even utilities and expenses splitting
-- ✅ URL-based shareable links (no database needed)
-- ✅ Complete data sharing (currency, split method, all calculations)
-- ✅ Responsive design
-- ✅ Copy to clipboard functionality
+## Other Platforms
 
-### Custom Domain (Optional)
-- In Vercel dashboard, go to Settings > Domains
-- Add your custom domain
-- Update `NEXT_PUBLIC_APP_URL` environment variable
+### Netlify
+```bash
+npm run build
+# Deploy _next/ folder to Netlify
+```
+
+### Railway / Render / AWS Amplify
+- Import GitHub repository
+- Add environment variables
+- Build command: `npm run build`
+- Start command: `npm start`
+
+### Docker
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+CMD ["npm", "start"]
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MODEL_API_KEY` | Yes | Groq API key for chatbot |
+| `NEXT_PUBLIC_APP_URL` | No | Public app URL (for sharing) |
+| `NEXT_PUBLIC_GOOGLE_VERIFICATION` | No | Google Search Console verification code |
+
+## Troubleshooting
+
+**Build fails:**
+- Clear cache: `npm run build -- --clean`
+- Check Node.js version (requires 18+)
+
+**Chatbot not responding:**
+- Verify `MODEL_API_KEY` is set
+- Check Groq API quota
+
+**Shareable links not working:**
+- Ensure `NEXT_PUBLIC_APP_URL` is set correctly
