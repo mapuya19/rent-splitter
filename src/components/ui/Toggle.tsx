@@ -19,8 +19,10 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           <button
             type="button"
             className={clsx(
-              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-              props.checked ? 'bg-blue-600' : 'bg-gray-200'
+              'relative inline-flex h-6 w-11 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:scale-105',
+              props.checked 
+                ? 'bg-blue-600 shadow-lg shadow-blue-600/30' 
+                : 'bg-gray-200 hover:bg-gray-300'
             )}
             onClick={() => {
               if (props.onChange) {
@@ -33,8 +35,10 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           >
             <span
               className={clsx(
-                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                props.checked ? 'translate-x-6' : 'translate-x-1'
+                'inline-block h-4 w-4 transform rounded-full bg-white transition-all shadow-md',
+                props.checked 
+                  ? 'translate-x-6 scale-110' 
+                  : 'translate-x-1'
               )}
             />
           </button>

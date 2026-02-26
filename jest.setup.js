@@ -18,13 +18,6 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/',
 }))
 
-// Mock window.location
-delete window.location;
-window.location = {
-  origin: 'http://localhost:3000',
-  search: '',
-}
-
 // Mock clipboard API
 Object.assign(navigator, {
   clipboard: {

@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/Button';
 import { SplitResult } from '@/types';
 import { formatCurrency } from '@/utils/currency';
 import { Share2, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useGSAP } from '@gsap/react';
+import { animations } from '@/lib/animations';
 
 interface ResultsDisplayProps {
   results: SplitResult[];
@@ -16,6 +18,32 @@ interface ResultsDisplayProps {
 
 export function ResultsDisplay({ results, useRoomSizeSplit, selectedCurrency, onShare }: ResultsDisplayProps) {
   const [copied, setCopied] = useState(false);
+  const resultRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // GSAP: Number counting animations
+  useEffect(() => {
+    resultRefs.current.forEach((ref) => {
+      const amountElement = ref.querySelector('[data-amount]');
+      if (amountElement) {
+        const text = amountElement.textContent || '';
+        const match = text.match(/[\d,.-]+/);
+        if (match) {
+          const toValue = parseFloat(match[0].replace(/,/g, ''));
+          if (!isNaN(toValue) && toValue > 0) {
+            animations.countUp(amountElement, 0, toValue, 0.8, (num) => formatCurrency(num, selectedCurrency));
+          }
+        }
+      }
+    });
+  }, [results, selectedCurrency]);
+
+  // GSAP: Staggered entrance for results - more dramatic
+  useGSAP(() => {
+    if (results.length > 0) {
+      const cards = resultRefs.current.values();
+      animations.popIn(Array.from(cards));
+    }
+  }, { dependencies: [results.length] });
 
   const copyToClipboard = async () => {
     const text = `Rent Split Results\n` +
@@ -65,11 +93,18 @@ export function ResultsDisplay({ results, useRoomSizeSplit, selectedCurrency, on
       <CardContent>
         <div className="space-y-4">
           {results.map((result) => (
-            <div key={result.roommateId} className="border rounded-lg p-4">
+            <div 
+              key={result.roommateId} 
+              ref={(el) => { if (el) resultRefs.current.set(result.roommateId, el); }}
+              className="border rounded-lg p-4"
+            >
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-semibold text-lg">{result.roommateName}</h3>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div 
+                    data-amount 
+                    className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-green-600"
+                  >
                     {formatCurrency(result.totalShare, selectedCurrency)}
                   </div>
                   <div className="text-sm text-gray-500">

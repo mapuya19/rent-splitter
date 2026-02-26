@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useGSAP } from '@gsap/react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -8,6 +9,7 @@ import { NumberInput } from '@/components/ui/NumberInput';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Roommate, RoomAdjustments } from '@/types';
 import { RoomAdjustmentsComponent } from '@/components/RoomAdjustments';
+import { animations } from '@/lib/animations';
 
 interface RoommateFormProps {
   roommates: Roommate[];
@@ -17,6 +19,15 @@ interface RoommateFormProps {
 
 export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }: RoommateFormProps) {
   const [newRoommate, setNewRoommate] = useState({ name: '', income: '', roomSize: '' });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // GSAP: Staggered entrance for roommates - more dramatic
+  useGSAP(() => {
+    if (containerRef.current) {
+      const roommateCards = containerRef.current.querySelectorAll('[data-roommate]');
+      animations.slideInLeft(Array.from(roommateCards), 0.5);
+    }
+  }, { scope: containerRef, dependencies: [roommates.length] });
 
   const addRoommate = () => {
     const hasRequiredField = useRoomSizeSplit ? newRoommate.roomSize : newRoommate.income;
@@ -87,9 +98,9 @@ export function RoommateForm({ roommates, onRoommatesChange, useRoomSizeSplit }:
       <CardHeader>
         <CardTitle>Roommates</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4" ref={containerRef}>
         {roommates.map((roommate) => (
-          <div key={roommate.id} className="space-y-3">
+          <div key={roommate.id} data-roommate className="space-y-3">
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <Input

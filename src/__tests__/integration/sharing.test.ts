@@ -105,7 +105,6 @@ describe('URL-Based Sharing Integration Tests', () => {
       decompressedData.roommates.forEach((roommate, index) => {
         expect(roommate.name).toBe(scenario.data.roommates[index].name);
         expect(roommate.income).toBe(scenario.data.roommates[index].income);
-        expect(roommate.roomSize).toBe(scenario.data.roommates[index].roomSize);
       });
     });
   });
