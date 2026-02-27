@@ -9,7 +9,7 @@ import { processChatbotMessage, isConfirmation } from '@/utils/chatbot';
 import { sanitizeInput, validateMessageLength, detectPromptInjection } from '@/utils/security';
 import { clsx } from 'clsx';
 import { animations } from '@/lib/animations';
-import { Power2, Back } from 'gsap';
+import { Power2 } from 'gsap';
 
 // Simple markdown renderer for bot messages
 function MessageContent({ content }: { content: string }) {
@@ -117,40 +117,60 @@ export function Chatbot({
   const modalRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // GSAP: FAB bounce animation - more dramatic
+  // GSAP: FAB bounce animation - subtle
   useGSAP(() => {
     if (fabRef.current && !isOpen) {
-      animations.gentleBounce(fabRef.current, -1);
-      return () => gsap.killTweensOf(fabRef.current);
+      const tl = gsap.timeline({ repeat: -1, yoyo: true });
+      tl.to(fabRef.current, {
+        y: -4,
+        duration: 1.5,
+        ease: Power2.easeInOut
+      });
+      return () => {
+        gsap.killTweensOf(fabRef.current);
+      };
     }
   }, { scope: fabRef, dependencies: [isOpen] });
 
-  // GSAP: Modal spring animation
+  // GSAP: Modal spring animation - smooth and subtle
   useGSAP(() => {
-    if (modalRef.current) {
-      animations.modalSpring(modalRef.current, isOpen);
-    }
-  }, { scope: modalRef, dependencies: [isOpen] });
-
-  // GSAP: Message entrance animations - more dramatic
-  useGSAP(() => {
-    if (messagesContainerRef.current) {
-      const messageElements = messagesContainerRef.current.querySelectorAll('[data-message]');
+    if (modalRef.current && isOpen) {
       gsap.fromTo(
-        Array.from(messageElements),
-        { opacity: 0, y: 40, scale: 0.8, rotationX: -10 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          scale: 1, 
-          rotationX: 0,
-          duration: 0.5,
-          stagger: 0.08,
-          ease: Back.easeOut.config(2)
+        modalRef.current,
+        { opacity: 0, scale: 0.95, y: 20 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.3,
+          ease: Power2.easeOut
         }
       );
     }
-  }, { scope: messagesContainerRef, dependencies: [messages, isTyping] });
+  }, { scope: modalRef, dependencies: [isOpen] });
+
+  // GSAP: Message entrance animations - smooth and subtle
+  useGSAP(() => {
+    if (messagesContainerRef.current) {
+      const messageElements = messagesContainerRef.current.querySelectorAll('[data-message]');
+      const elementsArray = Array.from(messageElements);
+      // Only animate the last message (newest one)
+      const lastMessage = elementsArray[elementsArray.length - 1];
+      if (lastMessage) {
+        gsap.fromTo(
+          lastMessage,
+          { opacity: 0, y: 15, scale: 0.95 },
+          { 
+            opacity: 1, 
+            y: 0, 
+            scale: 1, 
+            duration: 0.4,
+            ease: Power2.easeOut
+          }
+        );
+      }
+    }
+  }, { scope: messagesContainerRef, dependencies: [messages.length] });
 
   // GSAP: Typing indicator bounce
   useGSAP(() => {
@@ -447,7 +467,7 @@ export function Chatbot({
           {/* Modal */}
           <div
             ref={modalRef}
-            className={`fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 w-auto sm:w-full sm:max-w-md h-[600px] max-h-[85vh] flex flex-col bg-white rounded-lg shadow-2xl border border-gray-200/50 ${
+            className={`fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 w-auto sm:w-full sm:max-w-md h-[600px] max-h-[85vh] flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200/50 dark:border-gray-700 ${
               isOpen ? '' : 'hidden'
             }`}
             style={{
@@ -474,13 +494,13 @@ export function Chatbot({
           </div>
 
           {/* Quick Actions */}
-          <div className="p-3 border-b border-gray-200 bg-gray-50">
+          <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('help-form')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px]"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 touch-manipulation min-h-[44px]"
                 style={{ touchAction: 'manipulation' }}
               >
                 Help Fill Form
@@ -489,7 +509,7 @@ export function Chatbot({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('explain-features')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px]"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 touch-manipulation min-h-[44px]"
                 style={{ touchAction: 'manipulation' }}
               >
                 Explain Features
@@ -498,7 +518,7 @@ export function Chatbot({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('income-vs-room')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px]"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 touch-manipulation min-h-[44px]"
                 style={{ touchAction: 'manipulation' }}
               >
                 Income vs Room Size
@@ -507,7 +527,7 @@ export function Chatbot({
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction('update-all')}
-                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 touch-manipulation min-h-[44px] bg-blue-50 border-blue-300 hover:bg-blue-100 text-blue-700 font-medium"
+                className="text-xs transition-all duration-200 hover:scale-105 active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 touch-manipulation min-h-[44px] bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium"
                 style={{ touchAction: 'manipulation' }}
               >
                 Update All Fields
@@ -533,36 +553,36 @@ export function Chatbot({
                 }`}
               >
                 {message.role === 'bot' && (
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-blue-600" />
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                 )}
                 <div
                   className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     message.role === 'user'
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
+                      : 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
                   }`}
                 >
                   <MessageContent content={message.content} />
                 </div>
                 {message.role === 'user' && (
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-4 w-4 text-gray-600" />
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                   </div>
                 )}
               </div>
             ))}
             {isTyping && (
-              <div data-message>
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-blue-600" />
+              <div data-message className="flex gap-3 justify-start">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-300 rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-300 rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-300 rounded-full" />
                   </div>
                 </div>
               </div>
@@ -571,7 +591,7 @@ export function Chatbot({
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex gap-2 items-end">
               <div className="flex-1 min-w-0">
                 <div className="w-full">
@@ -584,16 +604,19 @@ export function Chatbot({
                     aria-label="Chat input"
                     rows={1}
                     className={clsx(
-                      'flex w-full min-h-[40px] max-h-[120px] rounded-md border border-gray-300 bg-white px-3 py-2 text-base ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-y-auto',
-                      'leading-normal'
+                      'flex w-full min-h-[40px] max-h-[120px] rounded-md border border-gray-300 bg-white px-3 py-2 text-base ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none',
+                      'leading-normal',
+                      'dark:border-gray-600 dark:bg-gray-700 dark:placeholder:text-gray-400 dark:text-gray-100',
+                      inputValue.length > 0 ? 'overflow-y-auto' : 'overflow-hidden'
                     )}
                     style={{
-                      height: 'auto',
+                      height: '40px',
                     }}
                     onInput={(e) => {
                       const target = e.target as HTMLTextAreaElement;
                       target.style.height = 'auto';
-                      target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+                      const newHeight = Math.min(target.scrollHeight, 120);
+                      target.style.height = `${newHeight}px`;
                     }}
                   />
                 </div>
