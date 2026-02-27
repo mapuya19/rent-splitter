@@ -2,11 +2,10 @@
 
 **Fair rent and utilities calculator for roommates**
 
-![npm version](https://img.shields.io/npm/v/rent-splitter?style=flat-square)
-![License](https://img.shields.io/npm/l/rent-splitter?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
 ![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-19.0-blue?style=flat-square&logo=react)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
 [Demo](https://rent-splitted.vercel.app) • [Documentation](#-getting-started)
 

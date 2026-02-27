@@ -69,10 +69,11 @@ export async function POST(request: NextRequest) {
         ip: clientIP,
         confidence: injectionCheck.confidence,
         reason: injectionCheck.reason,
+        message: sanitizedMessage,
       });
 
-      // Block high-confidence injections
-      if (injectionCheck.confidence === 'high') {
+      // Block high and medium confidence injections
+      if (injectionCheck.confidence === 'high' || injectionCheck.confidence === 'medium') {
         return NextResponse.json(
           {
             error: 'Invalid request',
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      // For medium/low confidence, we'll still process but log it
+      // For low confidence, we'll still process but log it
     }
 
     // Validate and sanitize conversation history

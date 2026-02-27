@@ -16,26 +16,48 @@ const ALLOWED_CURRENCIES = [
 
 // Prompt injection patterns (common attack vectors)
 const PROMPT_INJECTION_PATTERNS = [
-  /ignore\s+(previous|all|the)\s+(instructions?|prompts?|rules?)/i,
-  /forget\s+(previous|all|the)\s+(instructions?|prompts?|rules?)/i,
-  /disregard\s+(previous|all|the)\s+(instructions?|prompts?|rules?)/i,
-  /you\s+are\s+now\s+(a|an)\s+/i,
-  /act\s+as\s+(if\s+you\s+are\s+)?(a|an)\s+/i,
-  /pretend\s+(to\s+be|you\s+are)\s+/i,
+  /ignore\s+(?:[\w\s]{0,50})?(?:previous|above)\s+(?:instructions?|prompts?|rules?|commands?|directives?)/i,
+  /ignore\s+(?:your|the|my|all|every|any|previous|above)\s+(?:instructions?|prompts?|rules?|commands?|directives?)/i,
+  /forget\s+(?:[\w\s]{0,50})?(?:previous)\s+(?:instructions?|prompts?|rules?|commands?|directives?)/i,
+  /forget\s+(?:your|the|my|all|every|any|previous)\s+(?:instructions?|prompts?|rules?|commands?|directives?)/i,
+  /disregard\s+(?:[\w\s]{0,50})?(?:previous)\s+(?:instructions?|prompts?|rules?|commands?|directives?)/i,
+  /disregard\s+(?:your|the|my|all|every|any|previous)\s+(?:instructions?|prompts?|rules?|commands?|directives?)/i,
+  /skip\s+(?:your|the|my)\s+(?:instructions?|prompts?)/i,
+  /you\s+(?:are\s+)?(?:now|currently)\s+(?:a|an|the)\s+/i,
+  /act\s+(?:as|like|if)\s+(?:you\s+are\s+)?(?:a|an|the)\s+/i,
+  /pretend\s+(?:to\s+be|you\s+are|that\s+you\s+are)\s+/i,
+  /roleplay\s+as\s+/i,
+  /become\s+(?:a|an)\s+/i,
+  /transform\s+(?:into|to)\s+/i,
   /system\s*:?\s*/i,
   /assistant\s*:?\s*/i,
   /\[INST\]/i,
   /<\|im_start\|>/i,
   /<\|im_end\|>/i,
   /###\s*(system|instruction|prompt)\s*:/i,
-  /override\s+(system|instructions?|prompts?)/i,
+  /override\s+(?:your|the|my|system)?\s*(?:instructions?|prompts?|rules?|commands?|restrictions?)/i,
+  /bypass\s+(?:your|the|my|system)?\s*(?:instructions?|prompts?|rules?|restrictions?)/i,
   /jailbreak/i,
-  /new\s+(instructions?|prompts?|rules?)/i,
-  /output\s+(the|your)\s+(system|full|entire)\s+(prompt|instructions?)/i,
-  /reveal\s+(the|your)\s+(system|full|entire)\s+(prompt|instructions?)/i,
-  /show\s+(me\s+)?(the|your)\s+(system|full|entire|original)\s+(prompt|instructions?)/i,
-  /what\s+(are|were)\s+(your|the)\s+(system|original|initial)\s+(instructions?|prompts?)/i,
-  /repeat\s+(the|your|back)\s+(system|original|initial)\s+(instructions?|prompts?)/i,
+  /dan\s+mode/i,
+  /developer\s+mode/i,
+  /new\s+(?:instructions?|prompts?|rules?|commands?)/i,
+  /update\s+(?:your|the|my)\s+(?:instructions?|prompts?|rules?)/i,
+  /replace\s+(?:your|the|my)\s+(?:instructions?|prompts?|rules?)/i,
+  /output\s+(?:the|your|my)\s+(?:system|full|entire|complete)?\s*(?:prompt|instructions?|rules?|commands?)/i,
+  /reveal\s+(?:the|your|my)\s+(?:system|full|entire|complete)\s+(?:prompt|instructions?|rules?|commands?)/i,
+  /show\s+(?:me\s+)?(?:the|your|my)\s+(?:system|full|entire|complete|original)?\s*(?:prompt|instructions?|rules?|commands?)/i,
+  /display\s+(?:the|your|my)\s+(?:system|full|entire)\s+(?:prompt|instructions?)/i,
+  /print\s+(?:the|your|my)\s+(?:system|full|entire)\s+(?:prompt|instructions?)/i,
+  /dump\s+(?:the|your|my)\s+(?:system|full|entire)\s+(?:prompt|instructions?)/i,
+  /what\s+(?:are|were)\s+(?:your|the|my)\s+(?:system|original|initial)?\s*(?:instructions?|prompts?|rules?)/i,
+  /repeat\s+(?:the|your|my|back)\s+(?:system|original|initial)\s+(?:instructions?|prompts?|rules?)/i,
+  /tell\s+me\s+(?:about|your)\s+(?:system|instructions?|prompt)/i,
+  /explain\s+(?:your|the)\s+(?:instructions?|prompt)/i,
+  /describe\s+(?:your|the)\s+(?:instructions?|prompt)/i,
+  /your\s+(?:system|instructions?|prompt)\s+(?:is|was|are|were|say)/i,
+  /how\s+do\s+you\s+(?:work|operate|function)/i,
+  /trust\s+(?:the|your|this)\s+process/i,
+  /execute\s+(?:this|that)\s+(?:instruction|command)/i,
 ];
 
 // Suspicious content patterns
@@ -94,30 +116,41 @@ export function validateMessageLength(message: string): { valid: boolean; error?
  */
 export function detectPromptInjection(message: string): { isInjection: boolean; confidence: 'low' | 'medium' | 'high'; reason?: string } {
   const sanitized = sanitizeInput(message);
+  const lowerSanitized = sanitized.toLowerCase();
   let matchCount = 0;
   let highestConfidence: 'low' | 'medium' | 'high' = 'low';
   const matchedPatterns: string[] = [];
+
+  // High-risk keywords in the message itself
+  const HIGH_RISK_KEYWORDS = [
+    'ignore', 'forget', 'disregard', 'override', 'jailbreak',
+    'bypass', 'dan mode', 'developer mode', 'trust the process', 'execute'
+  ];
+
+  // Medium-risk keywords in the message itself
+  const MEDIUM_RISK_KEYWORDS = [
+    'you are now', 'act as', 'pretend', 'roleplay', 'become',
+    'transform', 'system:', 'assistant:', '[inst]', '<|im_start|>', '<|im_end|>',
+    'reveal', 'output', 'show me', 'display', 'print', 'dump', 'repeat',
+    'tell me', 'explain', 'describe', 'what are your', 'how do you'
+  ];
 
   // Check for prompt injection patterns
   for (const pattern of PROMPT_INJECTION_PATTERNS) {
     if (pattern.test(sanitized)) {
       matchCount++;
-      matchedPatterns.push(pattern.source);
+      matchedPatterns.push(pattern.source.substring(0, 50) + '...');
       
-      // High confidence patterns
-      if (pattern.source.includes('ignore') || 
-          pattern.source.includes('forget') ||
-          pattern.source.includes('override') ||
-          pattern.source.includes('jailbreak') ||
-          pattern.source.includes('reveal') ||
-          pattern.source.includes('output')) {
+      // Determine confidence based on keywords in the message
+      const hasHighRisk = HIGH_RISK_KEYWORDS.some(keyword => lowerSanitized.includes(keyword));
+      const hasMediumRisk = MEDIUM_RISK_KEYWORDS.some(keyword => lowerSanitized.includes(keyword));
+      
+      if (hasHighRisk) {
         highestConfidence = 'high';
-      } else if (pattern.source.includes('you are now') || 
-                 pattern.source.includes('act as') ||
-                 pattern.source.includes('system:')) {
-        if (highestConfidence !== 'high') {
-          highestConfidence = 'medium';
-        }
+      } else if (hasMediumRisk && highestConfidence !== 'high') {
+        highestConfidence = 'medium';
+      } else if (highestConfidence === 'low') {
+        highestConfidence = 'medium';
       }
     }
   }
@@ -132,17 +165,17 @@ export function detectPromptInjection(message: string): { isInjection: boolean; 
     }
   }
 
-  // Multiple matches increase confidence
-  if (matchCount >= 3) {
+  // Multiple matches increase confidence (lower threshold for better security)
+  if (matchCount >= 2) {
     highestConfidence = 'high';
-  } else if (matchCount >= 2 && highestConfidence === 'low') {
+  } else if (matchCount === 1 && highestConfidence === 'low') {
     highestConfidence = 'medium';
   }
 
   return {
     isInjection: matchCount > 0,
     confidence: highestConfidence,
-    reason: matchCount > 0 
+    reason: matchCount > 0
       ? `Detected ${matchCount} suspicious pattern(s): ${matchedPatterns.slice(0, 3).join(', ')}`
       : undefined,
   };
@@ -386,6 +419,28 @@ export function validateResponseContent(content: string): { valid: boolean; erro
       return {
         valid: false,
         error: 'Response contains suspicious content',
+      };
+    }
+  }
+
+  // Check for system prompt leakage (indicators that LLM revealed its instructions)
+  const PROMPT_LEAKAGE_PATTERNS = [
+    /you\s+(?:are|were|have\s+been)\s+(?:instructed|told|directed)\s+to/i,
+    /(?:my|the|your)\s+(?:system\s+)?(?:instructions?|prompt|rules?|guidelines?)\s+(?:are|were|require|tell\s+me|say|state)/i,
+    /(?:according\s+to|per|based\s+on)\s+(?:my|the|your)\s+(?:system\s+)?(?:instructions?|prompt|rules?)/i,
+    /i\s+(?:am|was)\s+(?:supposed|instructed|programmed|designed)\s+to/i,
+    /here\s+(?:are|is)\s+(?:my|the)\s+(?:system\s+)?(?:instructions?|prompt|rules?|guidelines?)/i,
+    /(?:my|the)\s+(?:system\s+)?(?:instructions?|prompt|rules?)\s+(?:are|were|require|tell\s+me)\s+to/i,
+    /i\s+must\s+(?:follow|adhere\s+to|obey)\s+(?:these|my|the)\s+(?:instructions?|rules?)/i,
+    /system\s+prompt:?\s*[\s\S]{20,}/i,
+    /instructions:?\s*[\s\S]{20,}/i,
+  ];
+
+  for (const pattern of PROMPT_LEAKAGE_PATTERNS) {
+    if (pattern.test(sanitized)) {
+      return {
+        valid: false,
+        error: 'Response contains system prompt information',
       };
     }
   }
