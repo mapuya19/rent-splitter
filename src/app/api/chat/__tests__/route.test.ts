@@ -2,19 +2,20 @@
  * Tests for the Chat API route
  */
 
+import { vi } from 'vitest';
 import { POST } from '@/app/api/chat/route';
 import { NextRequest } from 'next/server';
 
 // Mock fetch globally
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock NextResponse
-jest.mock('next/server', () => ({
-  NextRequest: jest.fn(),
+vi.mock('next/server', () => ({
+  NextRequest: vi.fn(),
   NextResponse: {
-    json: jest.fn((data, init) => ({
-      json: jest.fn().mockResolvedValue(data),
+    json: vi.fn((data: unknown, init?: { status?: number }) => ({
+      json: vi.fn().mockResolvedValue(data),
       status: init?.status || 200,
       ok: (init?.status || 200) < 400,
     })),
@@ -25,7 +26,7 @@ describe('Chat API Route', () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset environment variables
     delete process.env.MODEL_API_KEY;
     // Reset fetch mock
@@ -33,13 +34,13 @@ describe('Chat API Route', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     console.error = originalConsoleError;
   });
 
   const createMockRequest = (body: { message?: string; conversationHistory?: Array<{ role: string; content: string }>; currentState?: unknown }): NextRequest => {
     return {
-      json: jest.fn().mockResolvedValueOnce(body),
+      json: vi.fn().mockResolvedValueOnce(body),
       headers: new Headers(),
     } as unknown as NextRequest;
   };
@@ -47,11 +48,11 @@ describe('Chat API Route', () => {
   const createMockResponse = (data: unknown, ok: boolean = true) => {
     return {
       ok,
-      json: jest.fn().mockResolvedValue(data),
-      text: jest.fn().mockResolvedValue(JSON.stringify(data)),
+      json: vi.fn().mockResolvedValue(data),
+      text: vi.fn().mockResolvedValue(JSON.stringify(data)),
       status: ok ? 200 : 400,
       headers: {
-        get: jest.fn().mockReturnValue(null),
+        get: vi.fn().mockReturnValue(null),
       },
     };
   };
@@ -75,7 +76,7 @@ describe('Chat API Route', () => {
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -134,7 +135,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -168,7 +169,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -199,7 +200,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -213,7 +214,7 @@ Is this information accurate?`,
 
       await POST(request);
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       expect(requestBody.messages.length).toBeGreaterThan(2); // System + history + new message
@@ -231,7 +232,7 @@ Is this information accurate?`,
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(errorResponse, false)
       );
 
@@ -251,7 +252,7 @@ Is this information accurate?`,
       // Set API key for this test
       process.env.MODEL_API_KEY = 'test-api-key';
       
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
       const request = createMockRequest({
         message: 'Hello',
@@ -305,7 +306,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -340,7 +341,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -351,7 +352,7 @@ Is this information accurate?`,
 
       await POST(request);
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       // Should contain Bearer token from environment configuration
       expect(fetchCall[1].headers.Authorization).toContain('Bearer');
       expect(fetchCall[1].headers.Authorization.length).toBeGreaterThan(10);
@@ -371,7 +372,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -386,7 +387,7 @@ Is this information accurate?`,
 
       await POST(request);
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
       const systemMessage = requestBody.messages.find((m: { role: string }) => m.role === 'system');
       
@@ -437,7 +438,7 @@ Is this information accurate?`,
         }],
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue(
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
         createMockResponse(mockLLMResponse)
       );
 
@@ -452,7 +453,7 @@ Is this information accurate?`,
 
       await POST(request);
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
       const systemMessage = requestBody.messages.find((m: { role: string }) => m.role === 'system');
       

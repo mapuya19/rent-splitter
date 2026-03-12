@@ -2,13 +2,14 @@
  * Rate limiter tests
  */
 
+import { vi } from 'vitest';
 import { checkRateLimit, getClientIP } from '@/utils/rateLimiter';
 
 describe('Rate Limiter', () => {
   const originalNow = Date.now;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -53,7 +54,7 @@ describe('Rate Limiter', () => {
       let currentTime = Date.now();
 
       // Mock Date.now to control time
-      Date.now = jest.fn(() => currentTime);
+      Date.now = vi.fn(() => currentTime) as unknown as () => number;
 
       // Make 20 requests (at limit)
       for (let i = 0; i < 20; i++) {
@@ -92,7 +93,7 @@ describe('Rate Limiter', () => {
       const ip = '10.0.0.1';
       let currentTime = Date.now();
 
-      Date.now = jest.fn(() => currentTime);
+      Date.now = vi.fn(() => currentTime) as unknown as () => number;
 
       // Make 20 requests
       for (let i = 0; i < 20; i++) {
