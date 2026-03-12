@@ -9,12 +9,7 @@ import {
 } from '@/utils/security';
 import { checkRateLimit, getClientIP } from '@/utils/rateLimiter';
 
-const MODEL_API_KEY = process.env.MODEL_API_KEY;
 const MODEL_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-
-if (!MODEL_API_KEY) {
-  console.error('MODEL_API_KEY environment variable is not set');
-}
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -183,7 +178,9 @@ Key rules:
       { role: 'user', content: sanitizedMessage },
     ];
 
+    const MODEL_API_KEY = process.env.MODEL_API_KEY;
     if (!MODEL_API_KEY) {
+      console.error('MODEL_API_KEY environment variable is not set');
       return NextResponse.json(
         { error: 'API key not configured. Please set MODEL_API_KEY environment variable.' },
         { status: 500 }

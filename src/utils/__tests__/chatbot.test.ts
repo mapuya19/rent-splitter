@@ -2,18 +2,19 @@
  * Tests for chatbot utility functions
  */
 
+import { vi } from 'vitest';
 import { processChatbotMessage, isConfirmation } from '@/utils/chatbot';
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('Chatbot Utils', () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Suppress console.error for tests
-    console.error = jest.fn();
+    console.error = vi.fn();
   });
 
   afterEach(() => {
@@ -22,14 +23,14 @@ describe('Chatbot Utils', () => {
 
   describe('processChatbotMessage', () => {
     const mockCallbacks = {
-      onSetTotalRent: jest.fn(),
-      onSetUtilities: jest.fn(),
-      onAddRoommate: jest.fn(),
-      onAddCustomExpense: jest.fn(),
-      onRemoveRoommate: jest.fn(),
-      onRemoveCustomExpense: jest.fn(),
-      onSetCurrency: jest.fn(),
-      onSetSplitMethod: jest.fn(),
+      onSetTotalRent: vi.fn(),
+      onSetUtilities: vi.fn(),
+      onAddRoommate: vi.fn(),
+      onAddCustomExpense: vi.fn(),
+      onRemoveRoommate: vi.fn(),
+      onRemoveCustomExpense: vi.fn(),
+      onSetCurrency: vi.fn(),
+      onSetSplitMethod: vi.fn(),
     };
 
     it('should successfully process a message with LLM API', async () => {
@@ -41,9 +42,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -85,9 +86,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -110,9 +111,9 @@ describe('Chatbot Utils', () => {
     });
 
     it('should surface helpful message when API responds with error', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: false,
-        json: jest.fn().mockResolvedValue({ error: 'API error' }),
+        json: vi.fn().mockResolvedValue({ error: 'API error' }),
       });
 
       const result = await processChatbotMessage(
@@ -127,7 +128,7 @@ describe('Chatbot Utils', () => {
     });
 
     it('should handle network errors gracefully with guidance message', async () => {
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
       const result = await processChatbotMessage(
         'Hello',
@@ -146,9 +147,9 @@ describe('Chatbot Utils', () => {
         parsedData: {},
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const conversationHistory = [
@@ -162,7 +163,7 @@ describe('Chatbot Utils', () => {
         mockCallbacks
       );
 
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
       const requestBody = JSON.parse(fetchCall[1].body);
 
       expect(requestBody.conversationHistory).toHaveLength(2);
@@ -176,9 +177,9 @@ describe('Chatbot Utils', () => {
         parsedData: {},
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -200,9 +201,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -227,9 +228,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -262,9 +263,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -272,7 +273,7 @@ describe('Chatbot Utils', () => {
         [],
         {
           ...mockCallbacks,
-          onRemoveRoommate: jest.fn(),
+          onRemoveRoommate: vi.fn(),
         },
         {
           roommates: [
@@ -286,7 +287,7 @@ describe('Chatbot Utils', () => {
       // Execute autofill
       const extendedCallbacks = {
         ...mockCallbacks,
-        onRemoveRoommate: jest.fn(),
+        onRemoveRoommate: vi.fn(),
       };
       
       await processChatbotMessage(
@@ -315,9 +316,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -325,7 +326,7 @@ describe('Chatbot Utils', () => {
         [],
         {
           ...mockCallbacks,
-          onRemoveCustomExpense: jest.fn(),
+          onRemoveCustomExpense: vi.fn(),
         },
         {
           customExpenses: [
@@ -339,7 +340,7 @@ describe('Chatbot Utils', () => {
       // Execute autofill
       const extendedCallbacks = {
         ...mockCallbacks,
-        onRemoveCustomExpense: jest.fn(),
+        onRemoveCustomExpense: vi.fn(),
       };
       
       await processChatbotMessage(
@@ -367,9 +368,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -396,9 +397,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -426,9 +427,9 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
@@ -456,14 +457,14 @@ describe('Chatbot Utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const extendedCallbacks = {
         ...mockCallbacks,
-        onRemoveRoommate: jest.fn(),
+        onRemoveRoommate: vi.fn(),
       };
 
       const result = await processChatbotMessage(
@@ -491,9 +492,9 @@ describe('Chatbot Utils', () => {
         parsedData: {},
       };
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
+        json: vi.fn().mockResolvedValue(mockApiResponse),
       });
 
       const result = await processChatbotMessage(
