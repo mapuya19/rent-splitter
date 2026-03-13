@@ -2,12 +2,10 @@
 
 **Fair rent and utilities calculator for roommates**
 
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
-![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=flat-square&logo=next.js)
-![React](https://img.shields.io/badge/React-19.0-blue?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?style=flat-square&logo=typescript)
+![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-19.2-blue?style=flat-square&logo=react)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
-
-[Demo](https://rent-splitted.vercel.app) • [Documentation](#-getting-started)
 
 ## ✨ Features
 
@@ -53,10 +51,6 @@ Open [http://localhost:3000](http://localhost:3000)
 **Utilities & expenses**: Split equally among all roommates
 
 **Sharing**: Generate compressed URLs to share calculations with roommates
-
-## 🛠️ Tech Stack
-
-Next.js 15 (App Router) • TypeScript 5 • React 19 • Tailwind CSS v4 • GSAP 3.12 • Jest 29.7 • Groq API (Llama 3.1)
 
 ## 🌐 Deployment
 

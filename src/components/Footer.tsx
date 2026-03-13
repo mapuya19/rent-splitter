@@ -49,7 +49,7 @@ export function Footer() {
           
           {/* Copyright */}
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            © 2025 Rent Splitter. Built with Next.js and Tailwind CSS.
+            © {new Date().getFullYear()} Rent Splitter. Built with Next.js and Tailwind CSS.
           </div>
         </div>
       </div>
